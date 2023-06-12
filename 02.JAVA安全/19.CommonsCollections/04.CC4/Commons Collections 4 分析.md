@@ -98,6 +98,9 @@ public class TestCC4 {
 
 ```
 ![image.png](Commons Collections4 分析.assets/2023_05_19_10_37_25_uGqCkxoU.png)
+
+
+
 ## 分析
 ### 0x1
 ```java
@@ -148,4 +151,8 @@ comparator_field.set(queue,Tcomparator);
 ## 调试
 在调试过程中，前部分同CC2，一直到`comparator.compare()`,comparator为反射传入的Tcomparator，当调用compare方法时，就会执行`this.transformer.transform(obj1)`,最后就回直接到TraXFilter的构造函数里，执行newTransformer
 ![image.png](Commons Collections4 分析.assets/2023_05_19_10_37_26_CRLvOmsI.png)
-最后在getTransletInstance函数里，将传入的字节码实例化![image.png](Commons Collections4 分析.assets/2023_05_19_10_37_26_vAOWG2n4.png)
+
+最后在getTransletInstance函数里，将传入的字节码实例化
+
+![image.png](Commons Collections4 分析.assets/2023_05_19_10_37_26_vAOWG2n4.png)
+

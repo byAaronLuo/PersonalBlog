@@ -4,15 +4,23 @@ CC5 利用的还是CC1的链路，使用LazyMap，只要调用了LazyMap.get()�
 在CC5中这里引入了新的两个类，分别是**TiedMapEntry，BadAttributeValueExpException**
 ### TiedMapEntry
 可以看到map，和key都是可控的，在调用getValue的时候，就直接调用get方法，实现LazyMap#get()
+
 ![image.png](Commons Collections 5 分析.assets/2023_05_19_10_37_21_YU4Byvbu.png)
+
 ![image.png](Commons Collections 5 分析.assets/2023_05_19_10_37_21_KHiUvyfT.png)
+
 那么要在哪里调用这个getvalue函数呢，在`TiedMapEntry`里，我们可以看到该类为其实现了一个`toString()`方法
 ![image.png](Commons Collections 5 分析.assets/2023_05_19_10_37_21_x8EC6yVt.png)
+
 那么找到能调用`TiedMapEntry#toString()`方法就显得至关重要，接下来`BadAttributeValueExpException`类就会带来一片光明
+
 ### BadAttributeValueExpException
 `BadAttributeValueExpexception` 在readObject的时候，如果能读这个valObj为`TiedMapEntry`的实例，那么是不是就是一条完美的链路？
+
 ![image.png](Commons Collections 5 分析.assets/2023_05_19_10_37_22_Zc2w9KjJ.png)
+
 在此处，我们可以看到`BadAttributeValueExpexception` 的构造函数只有一个值val，但是类型是Object，那么我们可以按如下构造，当其反序列化的时候，调用readObject()函数的时候，反序列化得到的valObj就是对应的`TiedMapEntry`实例
+
 ```java
 // 创建一个实例
 BadAttributeValueExpException val = new BadAttributeValueExpException(null);
@@ -125,26 +133,36 @@ valfield.set(val,entry);
                                     Runtime.exec()
 ```
 ![image.png](Commons Collections 5 分析.assets/2023_05_19_10_37_22_AOUvgQqk.png)
+
 ## 调试
 调试过程和LazyMap是一样的，我们在`LazyMap#get`处`factory.transform(key)`处打下断点来分析
 ![image.png](Commons Collections 5 分析.assets/2023_05_19_10_37_22_WcmBpluF.png)
+
 可以看到利用链路为`BadAttributeValueExpException.readObject()`-> `TiedMapEntry.toString()`-> ` LazyMap.get()`->`ChainedTransformer.transform()`
+
 ![image.png](Commons Collections 5 分析.assets/2023_05_19_10_37_23_XfMSdLRK.png)
+
 这里就是常规链式调用了
+
 ![image.png](Commons Collections 5 分析.assets/2023_05_19_10_37_23_9mfpr51S.png)
+
+> [!TIP]
+>
 > 注：在调试过程中，如果在`LazyMap#get`前的堆栈打上断点，就无法进入LazyMap.get()的if语句
 
 在调试过程中，如果在`LazyMap.get()`之前的堆栈中打下断点，比如`BadAttributeValueExpException.readObject()`、`TiedMapEntry.toString()`、`TiedMapEntry.getValue()`处打上断点，是无法进入 `LazyMap.get()`if 判断语句
 在这里可以看到，我圈起来的部分，这里的意思就是已经执行了，因为发生调用了，只不过debug无法进入
+
 ![image.png](Commons Collections 5 分析.assets/2023_05_19_10_37_24_dcBmzp9l.png)
-到这里我们直接看`LazyMap.get()`方法，这里断点一定要打在if处，不然是不能进入断点
-可以看到，在if处，得到了map参数已经不是空，而是在序列化的时候已经赋的初值。
-可以通过比较没有在`LazyMap.get()`前的堆栈下断点的区别
+
+到这里我们直接看`LazyMap.get()`方法，这里断点一定要打在if处，不然是不能进入断点，可以看到，在if处，得到了map参数已经不是空，而是在序列化的时候已经赋的初值。可以通过比较没有在`LazyMap.get()`前的堆栈下断点的区别
+
 ![image.png](Commons Collections 5 分析.assets/2023_05_19_10_37_24_rQw9ecjh.png)
+
 图1 `LazyMap.get()`堆栈前下断点
 ![image.png](Commons Collections 5 分析.assets/2023_05_19_10_37_25_EJBxRNAZ.png)
-图2 `LazyMap.get()`堆栈前无断点
-这就是为什么我在调试部分我没有在其他函数处打断点，而是直接在`LazyMap#get()`处打断点。
+
+图2 `LazyMap.get()`堆栈前无断点，这就是为什么我在调试部分我没有在其他函数处打断点，而是直接在`LazyMap#get()`处打断点。
 
 
 

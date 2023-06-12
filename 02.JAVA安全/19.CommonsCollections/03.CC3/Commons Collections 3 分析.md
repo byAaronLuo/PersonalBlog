@@ -33,9 +33,15 @@ ObjectInputStream.readObject()
  CC2中，就是在`InvokerTransformer.transform()`中通过反射调用`TemplatesImpl.newTransformer()`方法，而CC3中，就可以直接使用`TrAXFilter`来调用`newTransformer()`方法
 #### InstantiateTransformer
 在该类中实现了Transformer，Serializable接口
+
 ![图片.png](Commons Collections3 分析.assets/2023_05_19_10_37_27_0gjywlxP.png)
+
 在它的transform方法中，实现了当传入的input为class时，可以直接获取其对应的构造函数直接实例化并返回
+
 ![图片.png](Commons Collections3 分析.assets/2023_05_19_10_37_28_pXU7hTI8.png)
+
+
+
 ## POC
 ```java
 package com.myproject;
@@ -182,36 +188,65 @@ Map proxyMap = (Map) Proxy.newProxyInstance(Map.class.getClassLoader(), new Clas
 handler = (InvocationHandler) constructor.newInstance(Target.class, proxyMap);
 ```
 而怎么才能调用`(TransformerImpl) templates.newTransformer();`呢，这个时候就要用`InstantiateTransformer`了，`InstantiateTransformer`，前置知识中提到了该类实现了Transformer，Serializable接口，当传入的input为class时，可以直接获取其对应的构造函数直接实例化并返回
+
 ![图片.png](Commons Collections3 分析.assets/2023_05_19_10_37_28_3YhoSDIp.png)
+
 那么当链式调用的时候，传入input是`TrAXFilter`，在对其进行实例化的时候，我们已经通过`InstantiateTransformer(new Class[]{Templates.class}, new Object[]{templates})`构造函数，已经将`iParamTypes`，`iArgs`传入，其中`iParamTypes = Templates.class`, `iArgs = javasisst创建的恶意类`，在实例化的时候
+
 ![image.png](Commons Collections3 分析.assets/2023_05_19_10_37_28_3W0ftVEa.png)
+
 ### 0x3 
 LazyMap get()方法调用了transform()方法，factory参数就是传入的transformerChain，达到了代码2的条件
+
 ![image.png](Commons Collections3 分析.assets/2023_05_19_10_37_28_16f8hHuv.png)
+
 ### 0x4 
  还是P牛那句话：  
 > 如果将AnnotationInvocationHandler对象用Proxy进行代理，那么在readObject的时候，只要调用任意方法，就会进入到AnnotationInvocationHandler#invoke方法中，进而触发我们的LazyMap#get。
 
 AnnotationInvocationHandler是调用处理器，outerMap是被代理的对象，只要调用了LazyMap中的任意方法，就会触发AnnotationInvocationHandler中的invoke方法；
 而在readObject方法中调用了entrySet()方法，所以触发invoke
+
 ![image.png](Commons Collections3 分析.assets/2023_05_19_10_37_29_0NrGpj9v.png)
+
 ![image.png](Commons Collections3 分析.assets/2023_05_19_10_37_29_5pvcX3wM.png)
+
 ![image.png](Commons Collections3 分析.assets/2023_05_19_10_37_30_bYKfkc5I.png)
- 这样就基本上达到了执行命令所需要的条件。  
+
+这样就基本上达到了执行命令所需要的条件。  
+
 ## 调试
-this.memberValues参数值为LazyMap，调用了它的entrySet方法，触发到invoke方法；  
+this.memberValues参数值为LazyMap，调用了它的entrySet方法，触发到invoke方法
+
 ![image.png](Commons Collections3 分析.assets/2023_05_19_10_37_30_spJ9ZUFW.png)
+
 跟进到ChainedTransformer.transform()，对transformers[]数组进行循环；  
-![image.png](Commons Collections3 分析.assets/2023_05_19_10_37_31_7cuPhQFf.png)第一轮循环，iTransformers[0]参数值为ConstantTransformer，进入它的transform方法，返回TrAXFilter类；  
-![image.png](Commons Collections3 分析.assets/2023_05_19_10_37_31_BHm6uXkP.png)第二轮循坏，iTransformers[1]参数值为InstantiateTransformer，TrAXFilter作为参数传入transform方法；
+![image.png](Commons Collections3 分析.assets/2023_05_19_10_37_31_7cuPhQFf.png)第一轮循环，iTransformers[0]参数值为ConstantTransformer，进入它的transform方法，返回TrAXFilter类
+
+![image.png](Commons Collections3 分析.assets/2023_05_19_10_37_31_BHm6uXkP.png)
+
+第二轮循坏，iTransformers[1]参数值为InstantiateTransformer，TrAXFilter作为参数传入transform方法；
+
 ![image.png](Commons Collections3 分析.assets/2023_05_19_10_37_32_ouZXOcqV.png)
+
 在getConstructor(iParamTypes)中，iParamTypes参数为Templates类，获取到构造函数为TrAXFilter，且在实例化的时候，需要传递Templates类型的参数，iargs则是我们构造的对应的Templates类实例（templates），在实例化过程中，再调用TransformerImpl的newTransformer()； 
-![image.png](Commons Collections3 分析.assets/2023_05_19_10_37_32_nLAQztKu.png)方法；
+
+![image.png](Commons Collections3 分析.assets/2023_05_19_10_37_32_nLAQztKu.png)
+
+方法；
+
 ![image.png](Commons Collections3 分析.assets/2023_05_19_10_37_33_ILmV2B9J.png)
+
  实例化_class[_transletIndex]，该参数的值就为EvilCat9080096364400()
+
 ![image.png](Commons Collections3 分析.assets/2023_05_19_10_37_33_EIohwpL1.png)
+
 最后命令执行成功
+
 ![image.png](Commons Collections3 分析.assets/2023_05_19_10_37_33_4yVzvHbp.png)
+
+
+
 ## 参考链接
 [https://xz.aliyun.com/t/10454#toc-1](https://xz.aliyun.com/t/10454#toc-1)
 

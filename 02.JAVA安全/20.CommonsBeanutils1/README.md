@@ -159,7 +159,6 @@ public class TestCB1 {
 }
 ```
 
-
 ![image.png](Commons Beanutils1 分析.assets/2023_05_19_10_37_02_lHAmzPr0.png)
 
 ![image.png](Commons Beanutils1 分析.assets/2023_05_19_10_37_03_tiRGTYOD.png)

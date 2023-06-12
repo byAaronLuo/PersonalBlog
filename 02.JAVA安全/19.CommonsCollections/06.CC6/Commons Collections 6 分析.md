@@ -266,6 +266,9 @@ public class TestCC6 {
 
 ```
 ![image.png](Commons Collections 6 分析.assets/2023_05_19_10_37_34_4hkAdQKN.png)
+
+
+
 ### 更改poc(反序列化HashMap)
 
 ```
@@ -353,6 +356,9 @@ public class TestCC6_Poc_1 {
 
 ```
 ![image.png](Commons Collections 6 分析.assets/2023_05_19_10_37_35_8CFXUb6Q.png)
+
+
+
 ### 更改POC_1(反序列化HashSet 1次反射)
 其实看HashSet这个类的时候，我们可以看到调用add方法的时候，其实传入entry之后，对应的Object就是恶意对象实例，那么就会调用`lazymap#get`方法，从而在客户端就执行1次命令
 具体可以看如下代码，当map.add(entry)之后，就会弹出notepad
@@ -371,13 +377,21 @@ HashSet map = new HashSet(1);
 map.add(entry);
 ```
 ![image.png](Commons Collections 6 分析.assets/2023_05_19_10_37_35_crLERMzs.png)
+
 调试一下如上的代码，在add处，传入的是e为entry
+
 ![image.png](Commons Collections 6 分析.assets/2023_05_19_10_37_35_WSaElxdU.png)
+
 在调用hash函数的时候，传入的也是entry
+
 ![image.png](Commons Collections 6 分析.assets/2023_05_19_10_37_36_wpu1o4OP.png)
+
 最后调用key(entry).hashcode()这时就会调用`TiedMapEntry#hashcode`，最后就会调用`LazyMap#get`方法
+
 ![image.png](Commons Collections 6 分析.assets/2023_05_19_10_37_36_tm7UAlbd.png)
+
 那么在客户端执行成功之后，是不行的，因为在`LazyMap#get`处，会判断map 中是否存在对应的key，如果存在，就不会调用factory.transform
+
 ```java
 // lazymap#get
 public Object get(Object key) {
@@ -396,9 +410,13 @@ lazyMap.remove("foo");
 ```
 此时还未执行remove操作，可以看到lazymap存在值为foo
 ![image.png](Commons Collections 6 分析.assets/2023_05_19_10_37_37_yWxbY3D4.png)
+
 执行remove之后，可以看到，lazymap清空了
+
 ![image.png](Commons Collections 6 分析.assets/2023_05_19_10_37_37_yU5PJCus.png)
+
 在ysoserial这个项目中，比如CC1中，都是在最后通过替换ChainedTransformer中的iTransformers为恶意的transformers来完成步骤
+
 ```java
 Transformer[] transformers = new Transformer[]{
     new ConstantTransformer(Runtime.class),
@@ -484,4 +502,6 @@ public class TestCC6_Poc_2 {
 
 ```
 在最后生成了序列化的文件，再将前面的代码注释掉，只留下反序列化的代码，最后只会执行transformers
+
 ![image.png](Commons Collections 6 分析.assets/2023_05_19_10_37_37_SvqhUa6W.png)
+

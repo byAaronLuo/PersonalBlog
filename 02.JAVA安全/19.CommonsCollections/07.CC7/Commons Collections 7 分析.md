@@ -64,7 +64,11 @@ public synchronized V put(K key, V value) {
 }
 ```
 这里我再补充一下hashCode函数做了什么操作，在下图可以看见，对Key和Value进行Objects.hashCode()之后又做了一次异或，这时就需要保证`Objects.hashCode(key1) == Objects.hashCode(key2)`，`Objects.hashCode(value1) == Objects.hashCode(value2)`,这样计算出来的hashCode才是相等的，这里我尝试了很多，都没有发现相等的Key，ysoserial的作者给出的 `yy` 和 `zZ` hashCode就是相等的
+
 ![image.png](Commons Collections 7 分析.assets/2023_05_19_10_37_49_E1m4JWSv.png)
+
+
+
 ### 0x2
 然后再看equals 函数，这里可以看到传入的object 为lazymap2，当前的this.map 为第一个传入的lazymap1(因为是他调用的equals方法)，然后再跟进equals
 ```java
@@ -110,9 +114,15 @@ public boolean equals(Object o) {
 }
 ```
 在序列化过程中，调用了lazymap的get方法之后，返回了value(Object) ，
+
 ![image.png](Commons Collections 7 分析.assets/2023_05_19_10_37_49_20hqWiyV.png)
+
 此时lazymap就多了这个value
+
 ![image.png](Commons Collections 7 分析.assets/2023_05_19_10_37_50_je8i6WxD.png)
+
+
+
 ### 0x3 
 那么在反序列化时，要保证要调用`lazymap#get`，那么需要保证两个lazymap被hashcode()之后，一定要相等，且调用的是`lazymap2#get`,那么lazymap2的`Transformer factor` 就要为执行命令的transformers，也需要将多余的LazyMap删除掉
 ```java
@@ -198,5 +208,8 @@ public class TestCC7 {
 ```
 ## 调试
 直接在`LazyMap#get`处打上断点，可以清晰看到对应的反序列化堆栈，就和序列化是一样的，最后把lazymap2里多余的键值对删除，并将其`Transformer factor`更改为cc1的经典transformers，然后再链式调用即可执行命令
+
 ![image.png](Commons Collections 7 分析.assets/2023_05_19_10_37_50_UNaBeXyA.png)
+
 ![image.png](Commons Collections 7 分析.assets/2023_05_19_10_37_50_akfZPQip.png)
+
