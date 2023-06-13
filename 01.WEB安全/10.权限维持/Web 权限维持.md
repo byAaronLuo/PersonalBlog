@@ -23,7 +23,11 @@ AddType application/x-httpd-php .png
 #比如照片格式：jpeg 、icon、ico、Thumbs.db
 ```
 ![aea5735135be5543291d7991875473c.png](./Web_权限维持.assets/2023_05_19_15_14_37_4Zb25CMq.png)
+
 ![image.png](./Web_权限维持.assets/2023_05_19_15_14_37_4irRGZFo.png)
+
+
+
 ### .htaccess本身
 默认情况下是无法访问.htaccess文件的，需要修改访问的权限
 ```php
@@ -37,20 +41,30 @@ AddType application/x-httpd-php .png
   # 注释内就是需要执行的php代码
 ```
 ![image.png](./Web_权限维持.assets/2023_05_19_15_14_37_xufDKmIP.png)
+
+
+
 ### user.ini && htaccess 自动包含
 ![image.png](./Web_权限维持.assets/2023_05_19_15_14_37_glJmKYwu.png)
+
 user.ini 和.htaccess都可以使两种配置模式生效：PHP_INI_PREDIR和PHP_INI_ALL 使用文件包含的两个相关配置 
 auto_prepend_file：指定一个文件，在主文件解析之前自动解析
 auto_append_file：指定一个文件，在主文件解析后自动解析
  user.ini 内容为
+
 ```shell
 auto_prepend_file=test.png
 # 或者
 auto_append_file=test.png
 ```
 条件：php5.3+ && NTS 版本
+
 ![e5c247957439f39886177c61346fe26.png](./Web_权限维持.assets/2023_05_19_15_14_37_lFxmtP9N.png)
+
 ![image.png](./Web_权限维持.assets/2023_05_19_15_14_38_pqoDaJ3c.png)
+
+
+
 ## 构建漏洞页面
 ### 404页面、文件上传其他功能性页面
 ```php
@@ -126,13 +140,20 @@ php内存马也就是php不死马是将不死马启动后删除本身，在内�
 5. usleep函数：延迟执行当前脚本若干微秒（一微秒等于一百万分之一秒）
 
 访问该文件，则会生成22.php，并立马删除该文件
+
 ![image.png](./Web_权限维持.assets/2023_05_19_15_14_38_AdD6bMLa.png)
+
 ![image.png](./Web_权限维持.assets/2023_05_19_15_14_38_Sa1Q5Rj0.png)
+
 ![image.png](./Web_权限维持.assets/2023_05_19_15_14_38_cS3K1b7T.png)
+
 ![image.png](./Web_权限维持.assets/2023_05_19_15_14_38_uxGcvZ4P.png)
+
  对于此类webshell，直接删除脚本是没有用的，因为php执行的时候已经把脚本读进去解释成opcode运行了
-### [JAVA Servlet](https://www.yuque.com/da-labs/secnotes/ro4qph)
-### [JAVA Spring](https://www.yuque.com/da-labs/secnotes/lq29ag)
+
+### [JAVA Servlet](/知识库/02.JAVA安全/11.Tomcat内存马无文件攻击/README.md)
+### [JAVA Spring](/知识库/02.JAVA安全/12.Spring框架内存马入门/README.md)
+
 ## Linux远控
 webshell能做的隐藏手段其实非常有限，因为http协议流量也很容易被监控。相比之Linux远控，因为体积小、通信走的是TCP或者DNS流量，在Linux环境下比传统的webshell更隐蔽，也更方便。也可以直接用C2接管
 #### BlueShell

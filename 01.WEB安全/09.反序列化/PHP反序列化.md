@@ -21,8 +21,10 @@ echo $json;
 'book_4' => 'test_4'
 ```
 ![image.png](./PHP 反序列化.assets/2023_05_19_15_02_23_LAUzsMbc.png)
+
 所以我们将数组序列化成json格式的字符串的目的就是为了方便传输，我们可以看见，这里json格式来保存数据主要是使用键值对格式来保存的。
 json格式只是为了传输数据而出现的，那么我们讲反序列化漏洞的话，就需要将字符串反序列化成对象。
+
 ## 概念
 在这里我写一个class，在这个class中存有一些变量，当这个class被实例化之后，在使用过程中，里面的一些变量发生了改变，当如果以后某些时候还会用到这个变量，如果我们让这个class一直不销毁，就会浪费系统资源。如果我们将这个对象序列化，将其保存成一个字符串，当你需要使用的时候，再将其反序列化为对象就可以了。
 ```php
@@ -43,8 +45,11 @@ echo serialize($example);
 ```
 在这里，我们首先创建了一个`DemoClass`，里面存了一些数据，然后我们实例化了一个对象，并将这个对象里的信息改变了，当我们还需要使用这个实例的话，就将序列化（serialize）后的字符串存起来，需要使用的时候再反序列化（unserialize）出来就可以了
 我们可以看一下结果
+
 ![image.png](./PHP 反序列化.assets/2023_05_19_15_02_23_AWIVTpn6.png)
+
 这个时候，序列化对象出来的格式和json格式不一样
+
 ```json
 O:9:"DemoClass":3:{s:4:"name";s:5:"aaron";s:3:"sex";s:5:"woman";s:3:"age";i:22;}
 // O 表示 object，这里还有一个情况是A，A表示是Array表示数组
@@ -74,6 +79,7 @@ echo $x->name;
 ?>
 ```
 ![image.png](./PHP 反序列化.assets/2023_05_19_15_02_23_lXDLAKJZ.png)
+
 ## 原理
 php里的魔术方法，通常因为某些条件而触发，不需要手动调用，我理解的是钩子函数吧，也就是生命周期的概念。
 ### 魔术方法
@@ -108,8 +114,11 @@ $a_unser = unserialize($a);
 O:1:"A":1:{s:4:"test";s:11:"hello,world";}
 ```
 test参数可控的情况下，就会输出hello,world
+
 ![image.png](./PHP 反序列化.assets/2023_05_19_15_02_23_Vy6IZomF.png)
+
 我们在来尝试不同的生命周期
+
 #### __construtor
 在这里，construct是处于创建对象的生命周期中，当创建对象的时候会调用该函数，这里要被利用的话，需要配合另一个Class，这里先用`__wakeup`在被反序列化时，new一个新的对象A，并传入参数，这里表示test参数可控的情况下，当test参数可控，并在反序列化后，将test参数传入A的新实例中，那么只要constructor中存在可执行代码或者执行命令的函数，那么造成影响
 ```php
@@ -211,7 +220,11 @@ $a_unser = unserialize($a);
 O:1:"B":1:{s:6:"test_1";s:11:"hello,world";}
 ```
 ![image.png](./PHP 反序列化.assets/2023_05_19_15_02_24_GZK08YiL.png)
+
 ![image.png](./PHP 反序列化.assets/2023_05_19_15_02_24_LPZRnFIj.png)
+
+
+
 #### __wakeup
 在这里__wakeup 是字符串反序列化的时候，会调用该钩子函数，只要执行unserialize方法就会触发该方法，其实我们关注php反序列化漏洞特别需要关注的魔术方法应该是`__wakeup`，`destruct`，因为这两个方法只要在反序列化过程中一定会用到的，尤其是`__wakeup`
 ```php
@@ -235,7 +248,9 @@ $a_unser = unserialize($a);
 O:1:"A":1:{s:4:"test";s:11:"hello,world";}
 ```
 ![image.png](./PHP 反序列化.assets/2023_05_19_15_02_25_fze9nubw.png)
+
 ![image.png](./PHP 反序列化.assets/2023_05_19_15_02_25_GsPz2lJd.png)
+
 ### 例子
 ```php
 <?php
@@ -298,7 +313,13 @@ $phar -> setMetadata($object);
 $phar -> stopBuffering();
 ```
 ![](./PHP 反序列化.assets/2023_05_19_15_02_25_YK2UbtDe.png)
+
 ![](./PHP 反序列化.assets/2023_05_19_15_02_25_ZGjK5O3H.png)
+
+
+
 ## 参考链接
 [https://www.freebuf.com/articles/web/167721.html](https://www.freebuf.com/articles/web/167721.html)
+
+
 
