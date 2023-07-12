@@ -13,16 +13,26 @@ ORACLE实例 = 进程 + 进程所使用的内存(SGA)
    - SGA:全称为 System Global Area(系统全局区域)。实际上是内存中的一片共享区域，其中包含实例配置、数据缓存、操作日志、SQL命令、用户信息等信息，由后台进程进行共享
 3. 数据库：一般指物理存储的文件，Oracle 数据库除了基本的数据文件，还有控制文件和 Redo 日志(重做文件 + 控制文件 + 数据文件 + 临时文件)，这些文件一般存储在$ORACLE_HOME\oradata...路径下，后缀名后DBF
 
+
+
 [关于实例和数据库之间的关系](https://yq.aliyun.com/articles/134241)
+
 简而言之，实例是临时性的，数据库是永久性的，一个数据库可以对应多个实例，而一个实例只能对应一个数据库
+
 ## Oracle 数据结构
 逻辑结构：表空间-->段-->区-->块
 ![image.png](./Oracle.assets/2023_05_19_10_41_07_8V0sHbz1.png)
+
 物理结构
+
 ![image.png](./Oracle.assets/2023_05_19_10_41_07_Pn7KloVe.png)
+
 Oracle关系型数据库管理系统从逻辑上把数据保存在表空间内，在物理上以数据文件的形式存储。表空间可以包含多种类型的内存区块，例如数据区块（Data Segment）、索引区块（Index Segment）等等。区块相应的由一个或多个扩展（extent）组成
 表空间(Tablespace)：数据文件就是由多个表空间组成的，这些数据文件和相关文件形成一个完整的数据库（以下的DBF后缀就是数据库默认创建的表空间）
+
 ![image.png](./Oracle.assets/2023_05_19_10_41_08_ks0cfIxW.png)
+
+
 
 - SYSTEM表空间：包含了数据字典以及（默认的）索引和集群。数据字典包含了一个保存了所有数据库中用户对象的信息的表,用于存储系统表和管理配置等基本信息
 - SYSAUX表空间：是SYSTEM表的一个辅助表空间，主要存放一些系统附加信息，用来降低SYSTEM表空间的负载
@@ -59,4 +69,6 @@ from table
 [https://blog.csdn.net/yuyecsdn/article/details/91410802](https://blog.csdn.net/yuyecsdn/article/details/91410802)
 
 [https://www.tr0y.wang/2019/04/16/Oracle%E6%B3%A8%E5%85%A5%E6%8C%87%E5%8C%97/](https://www.tr0y.wang/2019/04/16/Oracle%E6%B3%A8%E5%85%A5%E6%8C%87%E5%8C%97/)
+
+
 

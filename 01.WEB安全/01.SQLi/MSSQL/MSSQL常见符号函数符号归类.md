@@ -30,9 +30,7 @@
 | --- | --- |
 | DB_NAME() | 获取当前数据库名 |
 | USER_NAME() / USER | 获取用户在数据库中的名字 |
-| is_srvrolemember('sysadmin')
-is_srvrolemember('db_owner')
-is_srvrolemember('public') | 判断当前用户权限 |
+| is_srvrolemember('sysadmin')<br />is_srvrolemember('db_owner')<br />is_srvrolemember('public') |判断当前用户权限|
 
 ### 进制转换
 | 函数 | 释义 |
@@ -47,7 +45,7 @@ is_srvrolemember('public') | 判断当前用户权限 |
 ### 字符串操作函数
 | 函数 | 释义 |
 | --- | --- |
-| SUBSTRING (<expression>， <starting_ position>， length) | 返回从字符串左边第starting_ position 个字符起length个字符的部分。 |
+| SUBSTRING (`<expression>`， `<starting_ position>`，` length`) | 返回从字符串左边第starting_ position 个字符起length个字符的部分。 |
 | LEFT (<character_expression>， <integer_expression>) | 返回character_expression 左起 integer_expression 个字符。 |
 | RIGHT (<character_expression>， <integer_expression>) | 返回character_expression 右起 integer_expression 个字符 |
 | QUOTENAME (<’character_expression’>[， quote_ character])  | 返回被特定字符括起来的字符串。 |
@@ -55,15 +53,11 @@ is_srvrolemember('public') | 判断当前用户权限 |
 | REVERSE (<character_expression>)  | 将指定的字符串的字符排列顺序颠倒 |
 | REPLACE (<string_expression1>， <string_expression2>， <string_expression3>) | 用string_expression3 替换在string_expression1 中的子串string_expression2。 |
 | SPACE (<integer_expression>)  | 返回一个有指定长度的空白字符串。 |
-| STUFF (<character_expression1>， <start_ position>， <length>，<character_expression2>) | 用另一子串替换字符串指定位置、长度的子串。 |
+| STUFF (`<character_expression1>`，` <start_ position>`， `<length>`，`<character_expression2>`) | 用另一子串替换字符串指定位置、长度的子串。 |
 | LEFT (<character_expression>， <integer_expression>) | 返回character_expression 左起 integer_expression 个字符。 |
 | RIGHT (<character_expression>， <integer_expression>) | 返回character_expression 右起 integer_expression 个字符。 |
-| CHARINDEX (<’substring_expression’>， <expression>) | 返回字符串中某个指定的子串出现的开始位置
-其中substring _expression 是所要查找的字符表达式，expression 可为字符串也可为列名表达式。如果没有发现子串，则返回0 值。
-此函数不能用于TEXT 和IMAGE 数据类型。 |
-| PATINDEX (<’%substring _expression%’>， <column_ name>) | 其中子串表达式前后必须有百分号“%”否则返回值为0。
-返回字符串中某个指定的子串出现的开始位置。
-与CHARINDEX 函数不同的是，PATINDEX函数的子串中可以使用通配符，且此函数可用于CHAR、 VARCHAR 和TEXT 数据类型。 |
+| CHARINDEX (`<’substring_expression’>`， `<expression>`) | 返回字符串中某个指定的子串出现的开始位置<br />其中substring _expression 是所要查找的字符表达式，expression 可为字符串也可为列名表达式。如果没有发现子串，则返回0 值。<br />此函数不能用于TEXT 和IMAGE 数据类型。 |
+| PATINDEX (`<’%substring _expression%’>`， `<column_ name>`) | 其中子串表达式前后必须有百分号“%”否则返回值为0。<br />返回字符串中某个指定的子串出现的开始位置。<br />与CHARINDEX 函数不同的是，PATINDEX函数的子串中可以使用通配符，且此函数可用于CHAR、 VARCHAR 和TEXT 数据类型。 |
 | CONCAT | 连接字符串函数，MSSQL 2012+ 支持 |
 
 ### 其他函数/语句

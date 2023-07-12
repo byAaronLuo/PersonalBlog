@@ -12,21 +12,14 @@ x为任意字符，这里表示有一个空格 |
 ### 字符串函数
 | 函数 | 描述 |
 | --- | --- |
-| string 丨丨 string | 字串连接
-'Post' 丨丨 'greSQL' => PostgreSQL |
-| bit_length(string) | 字串里二进制位的个数
-bit_length('jose') => 32 |
-| char_length(string) | 字串中的字符个数
-char_length('jose') => 4 |
-| convert(string using conversion_name) | 使用指定的转换名字改变编码。
-convert('PostgreSQL' using iso_8859_1_to_utf8) =>'PostgreSQL' |
+| string 丨丨 string<br />'Post' 丨丨 'greSQL' => PostgreSQL | 字串连接|
+| bit_length(string)<br />bit_length('jose') => 32 | 字串里二进制位的个数|
+| char_length(string)<br />char_length('jose') => 4 | 字串中的字符个数|
+| convert(string using conversion_name)<br />convert('PostgreSQL' using iso_8859_1_to_utf8) =>'PostgreSQL' | 使用指定的转换名字改变编码。|
 | lower(string) | 把字串转化为小写 |
-| octet_length(string) | 字串中的字节数
-octet_length('jose') => 4 |
-| overlay(string placing string from int [for int]) | 替换子字串
-overlay('Txxxxas' placing 'hom' from 2 for 4) => Thomas |
-| position(substring in string) | 返回指定的子字串的位置
-position('om' in 'Thomas') =>3 |
+| octet_length(string)<br />octet_length('jose') => 4 | 字串中的字节数|
+| overlay(string placing string from int [for int])<br />overlay('Txxxxas' placing 'hom' from 2 for 4) => Thomas | 替换子字串|
+| position(substring in string)<br />position('om' in 'Thomas') =>3 | 返回指定的子字串的位置|
 | substring(string [from int] [for int]) | 抽取子字串 |
 | substring(string from pattern) | 抽取匹配 POSIX 正则表达式的子字串 |
 | substring(string from pattern for escape) | 抽取匹配SQL正则表达式的子字串 |
@@ -41,21 +34,15 @@ position('om' in 'Thomas') =>3 |
 | lpad(string text, length int [, fill text]) | 通过填充字符fill(默认为空白)，把string填充为长度length。 如果string已经比length长则将其截断(在右边)。 |
 | ltrim(string text [, characters text]) | 从字串string的开头删除只包含characters(默认是一个空白)的最长的字串。 |
 | md5(string text) | 计算给出string的MD5散列，以十六进制返回结果。 |
-| repeat(string text, number int) | 重复string number次。
-repeat('Pg', 4) => PgPgPgPg |
+| repeat(string text, number int)<br />repeat('Pg', 4) => PgPgPgPg | 重复string number次。|
 | replace(string text, from text, to text) | 把字串string里出现地所有子字串from替换成子字串to。 |
 | rpad(string text, length int [, fill text]) | 通过填充字符fill(默认为空白)，把string填充为长度length。如果string已经比length长则将其截断。 |
 | rtrim(string text [, character text]) | 从字串string的结尾删除只包含character(默认是个空白)的最长的字 |
-| split_part(string text, delimiter text, field int) | 根据delimiter分隔string返回生成的第field个子字串(1 Base)。
-split_part('abc~@~def~@~ghi', '~@~', 2) => def |
-| strpos(string, substring) | 声明的子字串的位置。
-strpos('high','ig') => 2  |
+| split_part(string text, delimiter text, field int)<br />split_part('abc~@~def~@~ghi', '~@~', 2) => def | 根据delimiter分隔string返回生成的第field个子字串(1 Base)。|
+| strpos(string, substring)<br />strpos('high','ig') => 2 | 声明的子字串的位置。|
 | substr(string, from [, count]) | 抽取子字串。 |
 | to_hex(number int/bigint) | 把number转换成其对应地十六进制表现形式。 |
-| translate(string text, from text, to text) | 把在string中包含的任何匹配from中的字符的字符转化为对应的在to中的字符。
-translate('12345', '14', 'ax') => a23x5
- |
-
+| translate(string text, from text, to text)<br />translate('12345', '14', 'ax') => a23x5 | 把在string中包含的任何匹配from中的字符的字符转化为对应的在to中的字符。|
 ### 转换函数
 | **函数** | **描述** |
 | --- | --- |

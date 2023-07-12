@@ -2,11 +2,8 @@
 ### 注释符
 | **注释符** | **说明** |
 | --- | --- |
-| #
-url编码:%23 | 单行注释
-在URL中#表示锚点，也就是hash路由，带上#不会请求后端路由，而是刷新前端路由 |
-| -- x | 单行注释
-x为任意字符，这里表示有一个空格 |
+| #<br />url编码:%23<br />在URL中#表示锚点，也就是hash路由，带上#不会请求后端路由，而是刷新前端路由 |单行注释|
+| -- x<br />x为任意字符，这里表示有一个空格 | 单行注释|
 | /**/  | 多行(内联)注释 |
 
 ### 常用运算符
@@ -52,9 +49,7 @@ x为任意字符，这里表示有一个空格 |
 | **函数** | **说明** |
 | --- | --- |
 | SUBSTR(str,N_start,N_length) | 对指定字符串进行截取，为SUBSTRING的简单版。 |
-| SUBSTRING() | 多种格式SUBSTRING(str,pos)、
-SUBSTRING(str FROM pos)、SUBSTRING(str,pos,len)、
-SUBSTRING(str FROM pos FOR len)。 |
+| SUBSTRING()<br />SUBSTRING(str FROM pos)、<br />SUBSTRING(str,pos,len)、<br />SUBSTRING(str FROM pos FOR len)。 | 多种格式SUBSTRING(str,pos)、|
 | RIGHT(str,len) | 对指定字符串从最右边截取指定长度。 |
 | LEFT(str,len) | 对指定字符串从最左边截取指定长度。 |
 | RPAD(str,len,padstr) | 在 str 右方补齐 len 位的字符串 padstr，返回新字符串。如果 str 长度大于 len，则返回值的长度将缩减到 len 所指定的长度。 |

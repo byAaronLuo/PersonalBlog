@@ -1,6 +1,6 @@
 ## 常用符号
 | 符号 | 释义 |
-| --- | --- |
+| :-: | :-: |
 | -- | 单行注释符 |
 | /**/ | 多行注释符 |
 | &#124;&#124; | 用于字符拼接 |
@@ -10,21 +10,17 @@
 ## 常用函数
 ### 字符函数
 | 函数 | 释义 |
-| --- | --- |
+| :-: | --- |
 | ascii | select ascii('a') from dual 结果97 |
 | chr | select chr(97) from dual 结果'a' |
 | upper | SELECT Upper ('abcde') FROM dual  结果：ABCDE |
 | lower | SELECT lower('ABCDE') FROM dual 结果：abcde |
-| initcap | SELECT Initcap ('AAA') FROM dual 结果：Aaa
-SELECT Initcap ('aaa') FROM dual 结果：Aaa |
-| concat | SELECT Concat ('a', 'b') FROM dual 结果：ab
-Select 'a' &#124;&#124; 'b' from dual 结果：ab |
+| initcap | SELECT Initcap ('AAA') FROM dual 结果：Aaa<br />SELECT Initcap ('aaa') FROM dual 结果：Aaa |
+| concat | SELECT Concat ('a', 'b') FROM dual 结果：ab<br />Select 'a' &#124;&#124; 'b' from dual 结果：ab |
 | substr | Select substr('abcde',0,3) from dual 结果：abc |
 | length | Select length('abcde') from dual 结果：5 |
 | replace | Select replace('abcde','a','A') from dual 结果：Abcde |
-| instr | Select instr('Hello World','W') from dual 结果：8
-Select instr('Hello World','w') from dual 结果：0
-如果在第一个参数中存在第二个参数，则返回第一个遇到的匹配参数的位置，该方法区分大小写 |
+| instr | Select instr('Hello World','W') from dual 结果：8<br />Select instr('Hello World','w') from dual 结果：0<br />如果在第一个参数中存在第二个参数，则返回第一个遇到的匹配参数的位置，该方法区分大小写 |
 | trim | select trim(' Mr Smith ') from dual 结果：Mr Smith |
 | lpad | select lpad('Smith',10,'*') from dual 结果：*****Smith |
 | rpad | select rpad('Smith',10,'*') from dual 结果：Smith***** |
@@ -32,14 +28,10 @@ Select instr('Hello World','w') from dual 结果：0
 ### 数学函数
 | 函数 | 释义 |
 | --- | --- |
-| round | select round(412,-2) from dual;  结果：400
-向上取整运算，第二个参数指定了取小数点后的几位，如果是5则进一。 |
-| Mod | select Mod(198,2) from dual 结果：0
-取模运算 |
+| round | select round(412,-2) from dual;  结果：400<br />向上取整运算，第二个参数指定了取小数点后的几位，如果是5则进一。 |
+| Mod | select Mod(198,2) from dual 结果：0<br />取模运算 |
 | ABS | select abs(-2) from dual 结果： 2 |
-| Trunc | select trunc(412.13,2) from dual   结果：412.13
-select trunc(412.53) from dual     结果：412
-向下取整运算，第二个参数指定了取小数点后的几位 |
+| Trunc | select trunc(412.13,2) from dual   结果：412.13<br />select trunc(412.53) from dual     结果：412<br />向下取整运算，第二个参数指定了取小数点后的几位 |
 
 ### 转换函数
 | 函数 | 释义 |
@@ -51,19 +43,11 @@ select trunc(412.53) from dual     结果：412
 ### 其他函数/表达式
 | 函数 | 释义 |
 | --- | --- |
-| NVL | select nvl('string',0) from dual 结果：string
-select nvl('',0) from dual 结果：0
-从两个表达式返回一个非 null 值 |
-| NULLIF | select nullif('abc','abc') from dual 结果：空
-select nullif('abc','abcd') from dual 结果：abc
-如果两个指定的表达式相等，则返回空值，否则返回第一个表达式 |
-| NVL2 | select nvl2('a','b','c') from dual 结果：b
-select nvl2('','b','c') from dual 结果：c
-如果第一个参数不为空，则返回第二个参数；否则，返回第三个参数 |
-| decode | select decode('1','1',1,2) from dual; 结果：1
-第一个参数是否等于第二个参数，如果等于，则返回第三个参数，否则返回第四个参数，可用于行转列 |
-| DBMS_PIPE.RECEIVE_MESSAGE | select dbms_pipe.receive_message('o',10)from dual; 结果：1
-时间注入函数，两个参数，从指定管道获取消息,timeout 为 integer的可选输入参数，用来指定等待时间 |
+| NVL | select nvl('string',0) from dual 结果：string<br />select nvl('',0) from dual 结果：0<br />从两个表达式返回一个非 null 值 |
+| NULLIF | select nullif('abc','abc') from dual 结果：空<br />select nullif('abc','abcd') from dual 结果：abc<br />如果两个指定的表达式相等，则返回空值，否则返回第一个表达式 |
+| NVL2 | select nvl2('a','b','c') from dual 结果：b<br />select nvl2('','b','c') from dual 结果：c<br />如果第一个参数不为空，则返回第二个参数；否则，返回第三个参数 |
+| decode | select decode('1','1',1,2) from dual; 结果：1<br />第一个参数是否等于第二个参数，如果等于，则返回第三个参数，否则返回第四个参数，可用于行转列 |
+| DBMS_PIPE.RECEIVE_MESSAGE | select dbms_pipe.receive_message('o',10)from dual; 结果：1<br />时间注入函数，两个参数，从指定管道获取消息,timeout 为 integer的可选输入参数，用来指定等待时间 |
 | case...when...then..else...end | select case when 1=1 then 1 else 2 end from dual 结果：1 |
 
 ## 语句归类
