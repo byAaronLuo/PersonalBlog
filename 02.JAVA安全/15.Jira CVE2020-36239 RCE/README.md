@@ -9,11 +9,15 @@
 nmap -T 4 -A 10.1.1.13  -p 40001
 ```
 ![image.png](./Jira_CVE2020-36239_RCE.assets/2023_05_19_16_08_48_YUI0jVfw.png)
+
 其中绑定的name为`rmi://com.atlassian.jira.index.property.CachingPluginIndexConfigurationManager.cacheByEntityKey`;绑定的实例接口为`net.sf.ehcache.distribution.RMICachePeer_Stub`
+
 ### 漏洞触发点
 在 net.sf.ehcache.distribution.RMICachePeer_Stub 找触发点, 官方通报中说是 Ehcache 暴露的 RMI 服务，所以实体类应该也在 Ehcache 包里
 在绑定的 `net.sf.ehcache.distribution.RMICachePeer_Stub`类中的 `getQuiet`方法接收的参数是 `Serializeable`对象，这里就是漏洞的触发点
+
 ![image.png](./Jira_CVE2020-36239_RCE.assets/2023_05_19_16_08_49_kNeYuawU.png)
+
 ## 漏洞验证
 所有绑定的 name, 都是绑定 net.sf.ehcache.distribution.RMICachePeer_Stub, 所以随机选一个就可以了， 使用 URLDNS 验证了漏洞确实存在
 ```java
@@ -41,7 +45,9 @@ public class Test {
 }
 ```
 ![image.png](./Jira_CVE2020-36239_RCE.assets/2023_05_19_16_08_49_PR0jwHOI.png)
+
 通过查看Jira 是否用了存在利用链的包，Commons-Collection 都用了相对安全的版本，但是 Commons-Beanutils 1.9.4 存在利用链，那么就可以利用CB1来构造序列化对象
+
 ### EXP
 首先编写shell.java，利用socket 编程反弹shell到目标地址，注意这里一定要写进无参构造函数，因为利用CB1链，通过javassit写入到新的类，再将其转换成bytecode 放在TemplatesImpl._bytecodes时，最后执行的是newInstance()，也就是实例化的过程，需要放在构造函数中
 ```java
@@ -238,6 +244,7 @@ public class Test_2 {
 
 ```
 ![image.png](./Jira_CVE2020-36239_RCE.assets/2023_05_19_16_08_49_VJm3yPNd.png)
+
 ## 参考链接
 [https://forum.butian.net/share/653](https://forum.butian.net/share/653)
 

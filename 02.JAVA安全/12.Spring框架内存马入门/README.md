@@ -9,9 +9,12 @@ bean 是Spring 框架的一个核心概念，它是构建程序的主干，并�
 ### ApplicationContext
 Spring 框架中，BeanFactory 接口是 Spring loC容器的实际代表者
 从下面的接口继承关系图可以看出，ApplicationContext接口继承了BeanFactory接口，并通过继承其他接口进一步扩展了基本容器的功能
+
 ![image.png](Spring 框架内存马入门.assets/2023_05_19_10_30_46_V62pCK9G.png)
+
 因此，org.springframework.context.ApplicationContext接口也代表了 IoC容器 ，它负责实例化、定位、配置应用程序中的对象(bean)及建立这些对象间(beans)的依赖
 IoC容器通过读取配置元数据来获取对象的实例化、配置和组装的描述信息。配置的零元数据可以用xml、Java注解或Java代码来表示。
+
 ### ContextLoaderListener 与 DispatcherServlet
 下面是一个典型 Spring 应用的 web.xml 配置示例：
 ```xml
@@ -91,13 +94,21 @@ DispatcherServlet 初始化完成后，会创建一个普通的 Child Context �
 ## 创建Spring MVC项目
 这里使用maven创建spring mvc 项目，实现版本控制
 这里选择maven-archetypes-webapp
+
 ![image.png](Spring 框架内存马入门.assets/2023_05_19_10_30_46_qQ5b16Mu.png)
+
 这里记得选择本地配置好的源为aliyun的maven配置文件，这样会快一些
+
 ![image.png](Spring 框架内存马入门.assets/2023_05_19_10_30_46_20hingrE.png)
+
 ![image.png](Spring 框架内存马入门.assets/2023_05_19_10_30_46_uMJVCAXc.png)
+
 等待maven 下载好之后，就可以看到如下的目录结构
+
 ![image.png](Spring 框架内存马入门.assets/2023_05_19_10_30_47_AolYT21N.png)
+
 然后添加SpringMVC的相关包
+
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 
@@ -219,14 +230,22 @@ DispatcherServlet 初始化完成后，会创建一个普通的 Child Context �
 
 ```
 然后添加SpringMVC框架，右键项目，点击Add Framework Support
+
 ![image.png](Spring 框架内存马入门.assets/2023_05_19_10_30_47_8yFZMCbN.png)
+
 如果在Add framework support中找不到Spring，那是因为项目中可能已经存在Spring相关文件，但不一定是完善的。因此我们要将已经存在的Spring给删掉，重新添加，方法如下：
 点击Project Structure，选择Facets，就会看到有一个Spring啦，右击它，点删除就行啦，然后再回到上面第3步重新Add framework support
+
 ![image.png](Spring 框架内存马入门.assets/2023_05_19_10_30_47_n4hGxmDq.png)
+
 ![image.png](Spring 框架内存马入门.assets/2023_05_19_10_30_47_LUgXQeYV.png)
+
 Spring框架添加完之后，会看到目录下多了两个xml文件
+
 ![image.png](Spring 框架内存马入门.assets/2023_05_19_10_30_48_6R0smOFv.png)
+
 下面开始配置web.xml
+
 ```xml
 <web-app>
 <display-name>HelloSpringMVC</display-name>
@@ -267,14 +286,23 @@ Spring框架添加完之后，会看到目录下多了两个xml文件
 </beans>
 ```
 然后注意，需要在main目录中添加java、resource文件夹，并且在java目录下，添加包名`com.spring.Controller`,因为我们在`dispatcher-servlet.xml`中添加了 `<context:component-scan base-package="com.spring.Controller"/>`这个意思就是扫描`com.spring.Controller`包下的Controller，这样才能访问到写的Controller
+
 ![image.png](Spring 框架内存马入门.assets/2023_05_19_10_30_48_XqP5dvtI.png)
+
 最后再配置一下本地Tomcat
+
 ![image.png](Spring 框架内存马入门.assets/2023_05_19_10_30_48_1iplmQ4u.png)
+
 ![image.png](Spring 框架内存马入门.assets/2023_05_19_10_30_48_Uphc29JT.png)
+
 出现了warning，此时点击fix即可，或者
+
 ![image.png](Spring 框架内存马入门.assets/2023_05_19_10_30_49_UnwxvcML.png)
+
 ![image.png](Spring 框架内存马入门.assets/2023_05_19_10_30_49_tXw0qxFi.png)
+
 ![image.png](Spring 框架内存马入门.assets/2023_05_19_10_30_49_FoxRXTem.png)
+
 ## Controller
 ### 手动注册Controller
 首先查看dispatcher-servlet.xml
@@ -321,6 +349,7 @@ public class HelloController {
 
 ```
 ![image.png](Spring 框架内存马入门.assets/2023_05_19_10_30_49_92yIG53o.png)
+
 ### 获取当前代码运行的上下文环境（dispatcherServlet）
 > 在这里我通过使用[LandGrey@观星实验室](https://www.anquanke.com/post/id/198886)的方法获取到Root WebApplicationContext，注入也能成功，但是会报错，提示没有dispatcherServlet，也就是不能分发给对应的Controller，由于Root WebApplicationContext是无法访问到Child WebApplicationContext 定义的bean，applicationContext.xml全局配置也没有搞定，希望有大佬可以给我applicationContext.xml的相关配置，以及如何成功利用
 
@@ -483,9 +512,14 @@ public class HelloWorldController {
 
 ```
 目录结构如下，其中`com.spring.Controller`包的俩controller分别是两种获取Child WebApplicationContext的方法实现
+
 ![image.png](Spring 框架内存马入门.assets/2023_05_19_10_30_49_nyzRGPMQ.png)
+
 在代码中可以看到，访问/hello，就会执行hello方法，然后就会动态注入url=>/test，以及controller(test方法)
+
 ![image.png](Spring 框架内存马入门.assets/2023_05_19_10_30_50_bJqe2YB8.png)
+
+
 
 
 
@@ -667,7 +701,9 @@ sun.misc.BASE64Decoder().decodeBuffer(base64String)
 jdk11+不支持，使用jdk8可直接使用，如果目标环境是jdk8+，那么建议自己写一个base64解码器来解码
 ClassLoader.getSystemClassLoader()
 如果随意给定某个继承自ClassLoader的类，可能会出现报错`java.lang.LinkageError : attempted duplicate class definition for name`。这是因为需要使用getSystemClassLoader()获取创建ClassLoader时需要添加委派父级
+
 ![image.png](Spring 框架内存马入门.assets/2023_05_19_10_30_50_Ntk1UFRB.png)
+
 ## 拦截器
 拦截器(Interceptor)在开发中处于非常重要的环节，全局拦截器可以针对接口授权情况进行放行或拦截，也可以进行身份验证，不满足则直接拦截，所有的请求都会先经过拦截器，然后才到达Controller，执行，最后返回，所以如果能动态注册一个拦截器，对所有的请求进行拦截，等到得到了我们设置的参数，再进行操作
 ### 手工创建拦截器
@@ -746,30 +782,51 @@ run:61, TaskThread$WrappingRunnable (org.apache.tomcat.util.threads)
 run:748, Thread (java.lang)
 ```
 关键的点在于`doDispatch`方法处，先通过getHandler方法获取了mappedHandler对象
+
 ![image.png](Spring 框架内存马入门.assets/2023_05_19_10_30_50_sZUrthA7.png)
+
 在后方调用mappedHandler的applyPreHandler方法
 ![image.png](Spring 框架内存马入门.assets/2023_05_19_10_30_51_IS3sMwWx.png)
 这个方法中就是依次调用每个interceptor实例的preHandle方法，实际上就进入了前面写好的TestInterceptor类的preHandle方法中
+
 ![image.png](Spring 框架内存马入门.assets/2023_05_19_10_30_51_qlV5aZzu.png)
+
 在这里就有去调用写的TestInterceptor类中的preHandle方法
+
 ![image.png](Spring 框架内存马入门.assets/2023_05_19_10_30_51_Ps2GruOS.png)
+
 最后到我们写的方法中，执行完成返回true，至此就完成拦截器的调用
+
 ![image.png](Spring 框架内存马入门.assets/2023_05_19_10_30_51_3pqjG29x.png)
+
 ### 动态注入
 跟踪mappedHandler的获取过程，先是调用了org.springframework.web.servlet.DispatcherServlet中的getHandler方法
 跟进getHandler方法，遍历了`this.handlerMappings`
+
 ![image.png](Spring 框架内存马入门.assets/2023_05_19_10_30_52_Bv0kDKsj.png)
+
 跟进`getHandler(request)`方法，
+
 ![image.png](Spring 框架内存马入门.assets/2023_05_19_10_30_52_KkxSaT5N.png)
+
 发现是调用的是`AbstractHandlerMapping (org.springframework.web.servlet.handler)` 也就是`org.springframework.web.servlet.handler.AbstractHandlerMapping`类中getHandler方法
+
 ![image.png](Spring 框架内存马入门.assets/2023_05_19_10_30_52_IE5CV7el.png)
+
 再跟进getHandlerExecutionChain方法
+
 ![image.png](Spring 框架内存马入门.assets/2023_05_19_10_30_52_fDMcHjiY.png)
+
 发现其中会遍历adaptedInterceptors这数组，并判断获取的interceptor实例是不是MappedInterceptor类的实例对象，而MappedInterceptor类就是对拦截器HandlerInterceptor接口的实现，所以前面定义的TestInterceptor自然会被加入chain中并返回
+
 ![image.png](Spring 框架内存马入门.assets/2023_05_19_10_30_53_zpifQnwl.png)
+
 那么如果我们能将恶意的**interceptor**实例添加到`org.springframework.web.servlet.handler.AbstractHandlerMapping`类的实例对象的**adaptedInterceptors**中，那么就可以完成动态注入那么关键就在于找到`org.springframework.web.servlet.handler.AbstractHandlerMapping`类的实例对象，CTRL+ALT+B找到所有`AbstractHandlerMapping`的子类，并在`beanFactory`的`beanDefinitionNames`中找到它的实例
+
 ![image.png](Spring 框架内存马入门.assets/2023_05_19_10_30_53_dv8IpHKx.png)
+
 因此可以通过context.getBean("org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping")获取该对象，再反射获取其中的adaptedInterceptors属性，并添加恶意interceptor实例对象即可完成内存马的注入
+
 ### 实例
 #### 0x1 注入普通马
 ```java
@@ -829,9 +886,15 @@ public class Test extends HandlerInterceptorAdapter {
 
 ```
 访问该路由之后，如下所示，在 adaptedInterceptors 数组中已经有添加过的恶意添加的interceptor
+
 ![image.png](Spring 框架内存马入门.assets/2023_05_19_10_30_53_VnPKYTR7.png)
+
 最后在如下所示code参数添加命令，则可以直接执行命令
+
 ![image.png](Spring 框架内存马入门.assets/2023_05_19_10_30_54_M9jwq4fx.png)
+
+
+
 #### 0x2 注入冰蝎马
 原理同controller注入冰蝎马
 ```java
@@ -913,6 +976,9 @@ public class Test extends HandlerInterceptorAdapter {
 
 ```
 ![image.png](Spring 框架内存马入门.assets/2023_05_19_10_30_54_3ev16QdO.png)
+
+
+
 ## 无文件落地注入
 这里我使用maven添加`fastjson 1.2.24`,使用jndi注入，当`newInsatnce`之后注册路由，并在此路由上绑定对应Controller
 ### 0x1 jndi 测试
@@ -1009,6 +1075,7 @@ Content-Length: 112
 }
 ```
 ![image.png](Spring 框架内存马入门.assets/2023_05_19_10_30_54_FX0kNlpV.png)
+
 ### 0x2 jndi 注入冰蝎马
 如果执行的字节码文件需要不用引入其他包，那么直接执行Runtime.getRuntime.exec即可执行命令，反弹shell等操作，但是如果需要在spring 应用中注入，那么需要使用spring相关的包，才能获取到对应的context，在这里需要使用maven项目，添加对应的spring 包，或者有jar包也可以直接添加到lib文件里，然后用idea编译成class文件，对应在target目录下
 ```java
@@ -1107,14 +1174,21 @@ public class Exec extends ClassLoader{
 
 ```
 生成的Exec.class
+
 ![image.png](Spring 框架内存马入门.assets/2023_05_19_10_30_54_1XyZiNcE.png)
+
 ![image.png](Spring 框架内存马入门.assets/2023_05_19_10_30_55_qOD96orl.png)
+
 ![image.png](Spring 框架内存马入门.assets/2023_05_19_10_30_55_k2h9gjZu.png)
+
+
+
 ### 问题总结
 
 1. 编译的时候，jdk最好选择服务器对应的jdk版本，jdk11 和 jdk8 跨大版本，在编译成功之后使用jndi注入会报错，而且是十分致命的错误
 2. maven项目，尽量也要选择与目标主机spring相差不大的版本，保证能获取到Context
 ## 参考链接
+
 [https://landgrey.me/blog/19/](https://landgrey.me/blog/19/)
 
 [https://landgrey.me/blog/12/](https://landgrey.me/blog/12/)

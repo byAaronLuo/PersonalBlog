@@ -28,6 +28,7 @@ ObjectInputStream.readObject()
 ![图片.png](Commons Collections3 分析.assets/2023_05_19_10_37_26_MldD7anP.png)
 
  在该类的构造方法中，调用了传入参数的newTransformer()方法，看到这个方法有点熟悉了，可以实例化，并且参数可控
+
 ![image.png](Commons Collections3 分析.assets/2023_05_19_10_37_27_4h7inoqQ.png)
 
  CC2中，就是在`InvokerTransformer.transform()`中通过反射调用`TemplatesImpl.newTransformer()`方法，而CC3中，就可以直接使用`TrAXFilter`来调用`newTransformer()`方法
@@ -220,8 +221,11 @@ this.memberValues参数值为LazyMap，调用了它的entrySet方法，触发到
 
 ![image.png](Commons Collections3 分析.assets/2023_05_19_10_37_30_spJ9ZUFW.png)
 
-跟进到ChainedTransformer.transform()，对transformers[]数组进行循环；  
-![image.png](Commons Collections3 分析.assets/2023_05_19_10_37_31_7cuPhQFf.png)第一轮循环，iTransformers[0]参数值为ConstantTransformer，进入它的transform方法，返回TrAXFilter类
+跟进到ChainedTransformer.transform()，对transformers[]数组进行循环;
+
+![image.png](Commons Collections3 分析.assets/2023_05_19_10_37_31_7cuPhQFf.png)
+
+第一轮循环，iTransformers[0]参数值为ConstantTransformer，进入它的transform方法，返回TrAXFilter类
 
 ![image.png](Commons Collections3 分析.assets/2023_05_19_10_37_31_BHm6uXkP.png)
 
@@ -244,8 +248,6 @@ this.memberValues参数值为LazyMap，调用了它的entrySet方法，触发到
 最后命令执行成功
 
 ![image.png](Commons Collections3 分析.assets/2023_05_19_10_37_33_4yVzvHbp.png)
-
-
 
 ## 参考链接
 [https://xz.aliyun.com/t/10454#toc-1](https://xz.aliyun.com/t/10454#toc-1)

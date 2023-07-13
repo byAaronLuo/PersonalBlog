@@ -213,16 +213,25 @@ public class AESEncode {
 
 ```
 第一步首先编译Main.java
+
 ![image.png](Shiro 550 无文件内存马.assets/2023_05_19_10_35_09_oncfBFeA.png)
+
 第二步，将编译生成的Main.class写入到TemplatesImpl._bytecodes中
+
 ![image.png](Shiro 550 无文件内存马.assets/2023_05_19_10_35_09_yQBPkwax.png)
+
 第三步，将序列化得到的CB1.ser通过AES加密，放置到Cookie的rememberMe字段中
+
 ![image.png](Shiro 550 无文件内存马.assets/2023_05_19_10_35_10_fT6WNsUC.png)
+
 最后携带参数即可执行命令
+
 ![image.png](Shiro 550 无文件内存马.assets/2023_05_19_10_35_10_4QYLW1w5.png)
+
 在此过程中我们可以发现，要执行命令就必须得带上这一串臃肿的Cookie，这显然与我们的注入内存马还是有点偏差，那么需要如何改造呢？当然还是得注入Servlet或者Listener
 如果在fnmsd大佬提供的payload，那么还是会超过MaxHTTPHeaderSize，那么我们知道HTTP协议中POST请求的参数可以携带大体积的参数，那么就只需要在该payload中再添加一个反序列化点，在POST请求体中获取反序列化的地方，进行反序列化完成二次注入，这样来执行命令
 首先完善payload，加上获取data参数的逻辑，再进行反序列化
+
 ![image.png](Shiro 550 无文件内存马.assets/2023_05_19_10_35_11_8clkbTJQ.png)
 
 ```java
@@ -624,17 +633,28 @@ public class Behinder extends AbstractTranslet implements Servlet {
 然后使用CB1序列化成文件，通过data参数传输过去
 ### 步骤
 首先先使用shiro的反序列化，先序列化Main.class，通过base64编码+AES编码之后查看payload是否可用
+
 ![image.png](Shiro 550 无文件内存马.assets/2023_05_19_10_35_11_WBMwP5bz.png)
+
 ![image.png](Shiro 550 无文件内存马.assets/2023_05_19_10_35_12_M2fnEQLx.png)
+
 然后将需要注入的servlet通过cb1序列化
+
 ![image.png](Shiro 550 无文件内存马.assets/2023_05_19_10_35_12_pf6q1rnS.png)
+
 再使用POST请求，data参数携带这一串base64编码之后的CB1.ser，传输的时候一定要记得url编码
+
 ![image.png](Shiro 550 无文件内存马.assets/2023_05_19_10_35_13_adOhgJP7.png)
+
 然后去掉Cookie，所有的参数，使用cmd2参数执行命令
+
 ![image.png](Shiro 550 无文件内存马.assets/2023_05_19_10_35_14_m8i7tnSK.png)
-当普通马都能注入，那就继续注入冰蝎马（这里说一下，为什么我对冰歇情有独钟😂，普通马在url中可以执行其实也行，主要是客户端webshell管理工具用起来真的很爽😂）
+
+当普通马都能注入，那就继续注入冰蝎马（这里说一下，为什么我对冰歇情有独钟😂，普通马在url中可以执行其实也行，主要是客户端webshell管理工具用起来真的很爽😂)
+
 ### 0x2 注入Servlet 冰歇马
-同[Tomcat内存马无文件攻击](https://www.yuque.com/da-labs/secnotes/dbyh6g)中的Servlet注入冰歇马一样，同样通过在service方法中添加冰歇马
+同[Tomcat内存马无文件攻击](https://www.yuque.com/da-labs/secnotes/dbyh6g)中的Servlet注入冰歇马一样，同样通过在service方法中添加冰蝎马
+
 ```java
 @Override
 public void service(ServletRequest servletRequest, ServletResponse servletResponse) throws ServletException, IOException {
@@ -871,13 +891,22 @@ public class Behinder extends AbstractTranslet implements Servlet {
 
 ```
 同上步骤，在data参数处，反序列化以上代码生成的序列化文件
+
 首先生成cookie，查看是否正常
+
 ![image.png](Shiro 550 无文件内存马.assets/2023_05_19_10_35_14_BljEYJnT.png)
+
 再将Servlet内存冰歇马序列化，最后再通过data参数传输
+
 ![image.png](Shiro 550 无文件内存马.assets/2023_05_19_10_35_15_ZsxkEodm.png)
+
 ![image.png](Shiro 550 无文件内存马.assets/2023_05_19_10_35_16_fa2h4i97.png)
+
+
+
 ### 0x3 注入Listener冰歇内存马
-同[Tomcat内存马无文件攻击](https://www.yuque.com/da-labs/secnotes/dbyh6g)中的Listener注入冰歇马一样
+同[Tomcat内存马无文件攻击](https://www.yuque.com/da-labs/secnotes/dbyh6g)中的Listener注入冰蝎马一样
+
 ```java
 import com.sun.org.apache.xalan.internal.xsltc.DOM;
 import com.sun.org.apache.xalan.internal.xsltc.TransletException;
@@ -1050,10 +1079,13 @@ public class BehinderListener extends AbstractTranslet implements ServletRequest
 
 ```
 ![image.png](Shiro 550 无文件内存马.assets/2023_05_19_10_35_16_SIyQ29sU.png)
+
 ![image.png](Shiro 550 无文件内存马.assets/2023_05_19_10_35_17_x3Dg5dAs.png)
+
 ## 提出问题
 在[天下大木头](https://github.com/KpLi0rn/ShiroVulnEnv)的github中，提供的payload-TomcatEcho.ser、TomcatEcho.java中，我在本地编译生成TomcatEcho.class，以及TomcatEcho.ser文件大小都超过了MaxHTTPHeaderSize，我自己编译的文件都无法反序列化，但是[天下大木头](https://github.com/KpLi0rn/ShiroVulnEnv)提供的TomcatEcho.ser就可以注入成功，该环境下的tomcatHeader.ser、tomcatInject.ser无法使用，报错为文章开头的未能转化webappclassloaderbase
 ## 参考链接
+
 [fnmsd-Java中间件通用回显方法的问题及处理](https://blog.csdn.net/fnmsd/article/details/106890242?spm=1001.2014.3001.5501)
 
 [fnmsd-通用版shiro回显](https://gist.github.com/fnmsd/4d9ed529ceb6c2a464f75c379dadd3a8)

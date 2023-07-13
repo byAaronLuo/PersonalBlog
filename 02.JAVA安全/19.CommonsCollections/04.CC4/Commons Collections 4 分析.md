@@ -4,6 +4,7 @@ CC4 相当于 CC2 + CC3 的结合，在ysoseria中CC4提及的是，`Variation o
 ### 前置知识
 [Commons Collections2 分析](https://www.yuque.com/da-labs/secnotes/fbvuia)
 [Commons Collections3 分析](https://www.yuque.com/da-labs/secnotes/zvy4dv)
+
 ### 环境
 
 - jdk1.8
@@ -150,6 +151,7 @@ comparator_field.set(queue,Tcomparator);
 ```
 ## 调试
 在调试过程中，前部分同CC2，一直到`comparator.compare()`,comparator为反射传入的Tcomparator，当调用compare方法时，就会执行`this.transformer.transform(obj1)`,最后就回直接到TraXFilter的构造函数里，执行newTransformer
+
 ![image.png](Commons Collections4 分析.assets/2023_05_19_10_37_26_CRLvOmsI.png)
 
 最后在getTransletInstance函数里，将传入的字节码实例化

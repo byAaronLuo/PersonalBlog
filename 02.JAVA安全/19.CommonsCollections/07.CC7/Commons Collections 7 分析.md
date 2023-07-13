@@ -67,8 +67,6 @@ public synchronized V put(K key, V value) {
 
 ![image.png](Commons Collections 7 分析.assets/2023_05_19_10_37_49_E1m4JWSv.png)
 
-
-
 ### 0x2
 然后再看equals 函数，这里可以看到传入的object 为lazymap2，当前的this.map 为第一个传入的lazymap1(因为是他调用的equals方法)，然后再跟进equals
 ```java
@@ -120,8 +118,6 @@ public boolean equals(Object o) {
 此时lazymap就多了这个value
 
 ![image.png](Commons Collections 7 分析.assets/2023_05_19_10_37_50_je8i6WxD.png)
-
-
 
 ### 0x3 
 那么在反序列化时，要保证要调用`lazymap#get`，那么需要保证两个lazymap被hashcode()之后，一定要相等，且调用的是`lazymap2#get`,那么lazymap2的`Transformer factor` 就要为执行命令的transformers，也需要将多余的LazyMap删除掉

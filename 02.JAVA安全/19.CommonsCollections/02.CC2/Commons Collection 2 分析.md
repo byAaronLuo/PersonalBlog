@@ -2,9 +2,13 @@
 CC2 使用的是 `javassist`和`PriorityQueue`来构造利用链，并且使用的是`commons-collections-4.0`版本，而`3.1-3.2.1`版本中`TransformingComparator`并没有去实现`Serializable`接口，也就是说这是不可以被序列化的，所以CC2不用3.x版本
 ## 环境
 jdk1.8
+
 ![image.png](./Commons Collection2 分析.assets/2023_05_19_10_37_12_qNCh54Ve.png)
+
 commons collections4-4.0
+
 ![image.png](./Commons Collection2 分析.assets/2023_05_19_10_37_12_YLQXFPJ8.png)
+
 ## POC
 首先看poc
 ```java
@@ -150,26 +154,50 @@ public class TestCC2 {
 }
 ```
 在这里就有一个很隐藏的问题，看似执行了命令，但是却没有生成`cc2.ser`反序列化文件，说明没有进入`try{}catch()`，那么执行的命令就是客户端命令，而不会发送到服务端
+
 ![image.png](./Commons Collection2 分析.assets/2023_05_19_10_37_13_1HJshPuQ.png)
+
 在此处分析一下，为什么我们将`Tcomparator`通过构造函数写进去，生成的实例化对象queue，是不会进行进入try代码块序列化，就直接在客户端执行命令
+
 ### 分析
 在queue.add处调试，在PriorityQueue这个构造函数中，这里就是我们传入的`TransformingComparator`
+
 ![image.png](./Commons Collection2 分析.assets/2023_05_19_10_37_13_tV7B3g5C.png)
+
 继续跟进，在queue.add(2)中，调用了offer方法
+
 ![image.png](./Commons Collection2 分析.assets/2023_05_19_10_37_14_YvtNdkbz.png)
+
 跟进offer方法，在这里需要关注siftUp方法
+
 ![image.png](./Commons Collection2 分析.assets/2023_05_19_10_37_14_Ba58kvZm.png)
+
 在siftUp方法中，comparator不为null(是我们传入的`TransformingComparator`)，则进入if循环，调用siftUpUsingComparator 方法
+
 ![image.png](./Commons Collection2 分析.assets/2023_05_19_10_37_14_hO14ZHyU.png)
+
 重点到comparator.compare()方法中，跟进
+
 ![image.png](./Commons Collection2 分析.assets/2023_05_19_10_37_15_cNBxEdP4.png)
+
 就到了compare方法中，在这里调用了两次`this.transformer.transform`方法
+
 ![image.png](./Commons Collection2 分析.assets/2023_05_19_10_37_15_1IO5bhm3.png)
+
 iTransformer从arr(构造的transformers[]数组)里取值，再调用transform方法
+
 ![image.png](./Commons Collection2 分析.assets/2023_05_19_10_37_15_CugLElTq.png)
+
 transform 方法就实现链式调用，执行`transformers[]数组`的`Runtime.getRuntime.exec()` 方法
+
 ![image.png](./Commons Collection2 分析.assets/2023_05_19_10_37_16_bopXaKGy.png)
-像这样执行了两次，导致会弹出两次计算器，**然后在此处执行完命令就抛出异常，程序就直接crash**![image.png](./Commons Collection2 分析.assets/2023_05_19_10_37_16_0nlPQrTq.png)**此时根本就还只是在向队列添加数据阶段**，还没有进行序列化就直接crash，是根本就不行的
+
+像这样执行了两次，导致会弹出两次计算器，**然后在此处执行完命令就抛出异常，程序就直接crash**
+
+![image.png](./Commons Collection2 分析.assets/2023_05_19_10_37_16_0nlPQrTq.png)
+
+**此时根本就还只是在向队列添加数据阶段**，还没有进行序列化就直接crash，是根本就不行的
+
 ### 解决方案
 我们在调用了`siftUpUsingComparator`方法，如果不走if分支，走else分支呢？也就是说不传入`comparator`，让其为null
 ```java
@@ -179,9 +207,13 @@ queue.add(1);
 queue.add(2);
 ```
 当其为null的时候，进入siftUpComparable方法，可以发现在这里只对队列进行了赋值操作，并没有进行compare操作。 返回后就执行序列化代码，但是并没有执行命令
+
 ![image.png](./Commons Collection2 分析.assets/2023_05_19_10_37_16_qsAOaIe6.png)
+
 那么如果需要在readObject中调用compare方法这个是否可能成功呢? 这里我们要知道，序列化是将对象转换成字符串的过程，反序列化是将字符串转换成对象的过程，那么在反序列化的过程中，读取了字符串，将其转换成对象之后是不是就需要赋值操作呢？那么在赋值操作的时候，我们不让comparator为null，那么就能进入到siftDownUsingComparator函数中
+
 ![image.png](./Commons Collection2 分析.assets/2023_05_19_10_37_17_sgFkOQy2.png)
+
 **条件：**
 
 1. 要执行try-catch代码块的内容 ->  queue 只执行赋值操作，在进行赋值操作的时候，comparator为null
@@ -194,12 +226,19 @@ field.setAccessible(true);
 field.set(queue,Tcomparator);
 ```
 在反序列化的时候，在readObejct函数里，执行heapify函数
+
 ![image.png](./Commons Collection2 分析.assets/2023_05_19_10_37_17_AsKg2Jta.png)
+
 我们通过反射设置了comparator为Tcomparator，此时comparator不为null，此时进入siftDownUsingComparator函数
+
 ![image.png](./Commons Collection2 分析.assets/2023_05_19_10_37_18_xzvlVuTI.png)
+
 在执行compare函数后，就执行transformer.transform方法，进行链式调用执行
+
 ![image.png](./Commons Collection2 分析.assets/2023_05_19_10_37_18_bCdwOEZQ.png)
+
 到这里就执行了`Runtime.getRuntime.exec("calc.exe")`
+
 ## Javassist
 [Javassit字节码编程](https://www.yuque.com/da-labs/secnotes/5a33638a5bb6c3896718b1b81570f2cf)
 ### 介绍
@@ -255,10 +294,13 @@ public class TestJavassist {
 }
 
 ```
- 新生成的类是这样子的，其中有一块static代码；  
+ 新生成的类是这样子的，其中有一块static代码；
+
 ![image.png](./Commons Collection2 分析.assets/2023_05_19_10_37_19_Z49RiqS1.png)
+
 当该类被实例化的时候，就会执行static里面的语句；
 在ysoserial的cc2中引入了 TemplatesImpl 类来进行承载攻击payload，需要用到javassist；
+
 ### POC
 ```java
 package com.myproject;
@@ -380,7 +422,9 @@ byte[] classBytes = cc.toBytecode();
 byte[][] targetByteCodes = new byte[][]{classBytes};
 ```
 在这里因为我们使用的`TemplatesImpl`，在其对应的`_bytecodes`参数中，是需要一个二维byte数组，并且在后续需要实例化`_bytecodes`的时候会检查是否继承了`AbstractTranslet`类
+
 ![image.png](./Commons Collection2 分析.assets/2023_05_19_10_37_19_91Ugcw7j.png)
+
 #### 0x3
 在这里通过给实例化的templates中的`_bytecodes`，`_name`，`_class`赋值操作，由于这些参数都是`private`，只能通过反射赋值，且`_bytecodes`为`javassit`动态生成的恶意类，`_name`可以为任意值，但是不能为空，`_class`一定为null，为什么要这样，在调试的时候再做解释
 ```java
@@ -437,10 +481,43 @@ try{
 }
 ```
 ### 分析
-在inputStream.readObject()处打断点，跟进直到`comparator.compare()`方法中![图片.png](https://cdn.nlark.com/yuque/0/2022/png/21929389/1652081265003-47a61fbc-e933-469d-b498-37c341caae45.png#clientId=u2044ba9c-3055-4&from=paste&height=1040&id=ubd9cbace&originHeight=1040&originWidth=1920&originalType=binary&ratio=1&rotation=0&showTitle=false&size=235759&status=done&style=none&taskId=u5757a169-a1a0-4223-8cda-7dfc7431c54&title=&width=1920)进入`comparator.compare()` 方法中![图片.png](https://cdn.nlark.com/yuque/0/2022/png/21929389/1652081328425-c307bf01-8c70-484e-8363-f25cff5423e2.png#clientId=u2044ba9c-3055-4&from=paste&height=1040&id=ua82b1410&originHeight=1040&originWidth=1920&originalType=binary&ratio=1&rotation=0&showTitle=false&size=247088&status=done&style=none&taskId=ufd5d0983-3bb0-4f22-93e4-15c851028bb&title=&width=1920)在这里可以看到这里会去执行TemplatesImpl.newTransformer()方法![图片.png](./Commons Collection2 分析.assets/2023_05_19_10_37_19_8rhbnqAX.png)`方法
-在这里可以看到0x3中说`_name`可以为任意值，但不能为null，以及`_class`要为null，因为只有当`_class`为null，才能执行`defineTransletClasses()`函数![图片.png](https://cdn.nlark.com/yuque/0/2022/png/21929389/1652081732138-12a14b9e-31de-4ec7-b656-8bcbcd949e9c.png#clientId=u2044ba9c-3055-4&from=paste&height=1040&id=u47cea69b&originHeight=1040&originWidth=1920&originalType=binary&ratio=1&rotation=0&showTitle=false&size=201107&status=done&style=none&taskId=u1f601e89-5433-458c-9e53-3cbd9e1a86d&title=&width=1920)进入`defineTransletClasses`函数，可以看到这个注释，大概意思就是会返回对自定义的类![图片.png](./Commons Collection2 分析.assets/2023_05_19_10_37_20_sKSidtZV.png)
+在inputStream.readObject()处打断点，跟进直到`comparator.compare()`方法中
+
+![图片.png](Commons Collection 2 分析.assets/1652081265003-47a61fbc-e933-469d-b498-37c341caae45.png)
+
+进入`comparator.compare()` 方法中
+
+![图片.png](Commons Collection 2 分析.assets/1652081328425-c307bf01-8c70-484e-8363-f25cff5423e2.png)
+
+在这里可以看到这里会去执行TemplatesImpl.newTransformer()方法
+
+![图片.png](./Commons Collection2 分析.assets/2023_05_19_10_37_19_8rhbnqAX.png)
+
+在这里可以看到0x3中说`_name`可以为任意值，但不能为null，以及`_class`要为null，因为只有当`_class`为null，才能执行`defineTransletClasses()`函数!
+
+![图片.png](Commons Collection 2 分析.assets/1652081732138-12a14b9e-31de-4ec7-b656-8bcbcd949e9c.png)
+
+进入`defineTransletClasses`函数，可以看到这个注释，大概意思就是会返回对自定义的类
+
+![图片.png](./Commons Collection2 分析.assets/2023_05_19_10_37_20_sKSidtZV.png)
+
 `loader.defineClass(_bytecodes[i]);` 将字节数组还原为Class对象  ,`_class[0]`就是恶意类
-这里对比父类是否是`AbstractTranslet`,这里就解释了0x2中为什么一定要继承`AbstractTranslet`![图片.png](https://cdn.nlark.com/yuque/0/2022/png/21929389/1652082143879-39850134-ba3f-452f-8c61-cf922ebad974.png#clientId=u2044ba9c-3055-4&from=paste&height=1040&id=ud6aeed6a&originHeight=1040&originWidth=1920&originalType=binary&ratio=1&rotation=0&showTitle=false&size=226366&status=done&style=none&taskId=uf58db8f4-bd39-4362-a990-c488fc90c71&title=&width=1920)如果`_transletIndex`没有被赋值（初始值为-1）,那么在下面的if语块中就会抛出异常![图片.png](https://cdn.nlark.com/yuque/0/2022/png/21929389/1652082286939-0a17fea0-b100-49f5-88f9-537705637d53.png#clientId=u2044ba9c-3055-4&from=paste&height=1040&id=u66837fde&originHeight=1040&originWidth=1920&originalType=binary&ratio=1&rotation=0&showTitle=false&size=197424&status=done&style=none&taskId=uf1652a5d-e632-4357-b802-c81ca450865&title=&width=1920)在这里实例化`_class[_transletIndex].newInstance()`，也就是我们使用Javassit生成的恶意代码（执行`Runtime.getRuntime.exec()`）![图片.png](https://cdn.nlark.com/yuque/0/2022/png/21929389/1652082448450-ba9f70fc-3818-4161-9dc4-0b2ae1a89f74.png#clientId=u2044ba9c-3055-4&from=paste&height=1040&id=ud0de97d6&originHeight=1040&originWidth=1920&originalType=binary&ratio=1&rotation=0&showTitle=false&size=228222&status=done&style=none&taskId=uec9904d2-999f-40a6-bad4-d76e17f70d2&title=&width=1920)![图片.png](./Commons Collection2 分析.assets/2023_05_19_10_37_20_3TMX4KAY.png)
+这里对比父类是否是`AbstractTranslet`,这里就解释了0x2中为什么一定要继承`AbstractTranslet`
+
+![图片.png](Commons Collection 2 分析.assets/1652082143879-39850134-ba3f-452f-8c61-cf922ebad974.png)
+
+如果`_transletIndex`没有被赋值（初始值为-1）,那么在下面的if语块中就会抛出异常
+
+![图片.png](Commons Collection 2 分析.assets/1652082286939-0a17fea0-b100-49f5-88f9-537705637d53-9233838-9233839.png)
+
+在这里实例化`_class[_transletIndex].newInstance()`，也就是我们使用Javassit生成的恶意代码（执行`Runtime.getRuntime.exec()`)
+
+![图片.png](Commons Collection 2 分析.assets/1652082448450-ba9f70fc-3818-4161-9dc4-0b2ae1a89f74.png)
+
+![图片.png](./Commons Collection2 分析.assets/2023_05_19_10_37_20_3TMX4KAY.png)
+
+
+
 ## 总结
 构造CC2要比CC1更复杂，其中CC2使用TemplatesImpl需要注意
 

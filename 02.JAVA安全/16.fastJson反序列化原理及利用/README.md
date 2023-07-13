@@ -66,6 +66,7 @@ public class Main {
 
 ```
 运行main方法
+
 ![image.png](./fastJson反序列化原理及利用.assets/2023_05_19_16_10_29_nArtmhU1.png)
 
 fastjson 会解析该字符串，将其解析成object，就可以看到解析完成之后的User{name='aaron', age='23'}，在这个过程中，SetName 方法是被调用了
@@ -79,19 +80,23 @@ Fastjson支持在json数据中使用@type属性指定该json数据被反序列�
 那么就开始调试！我丢！
 
 强制进入parse函数
+
 ![image.png](./fastJson反序列化原理及利用.assets/2023_05_19_16_10_30_5ViCYP2F.png)
 
 首先进入之后就会调用parse()函数，继续进入parse()函数
+
 ![image.png](./fastJson反序列化原理及利用.assets/2023_05_19_16_10_31_laNrBy53.png)
 
 依次步进，在这里又调用了parser对象的parse方法，继续进入
+
 ![image.png](./fastJson反序列化原理及利用.assets/2023_05_19_16_10_31_iukEFTxO.png)
+
 继续进入parse函数
+
 ![image.png](./fastJson反序列化原理及利用.assets/2023_05_19_16_10_31_PuAqG0DR.png)
 
-
-
 单步运行，直到case 12，这里调用了parseObject函数，继续进入
+
 ![image](fastJson反序列化原理及利用.assets/image.png)
 
 ![image.png](./fastJson反序列化原理及利用.assets/2023_05_19_16_10_31_ZPNtOdzD.png)
@@ -101,6 +106,7 @@ Fastjson支持在json数据中使用@type属性指定该json数据被反序列�
 ![image.png](./fastJson反序列化原理及利用.assets/2023_05_19_16_10_31_aRPXK3z2.png)
 
 ![image.png](./fastJson反序列化原理及利用.assets/2023_05_19_16_10_32_M5H8hrCd.png)
+
 在这里调用了deserializer实例方法的deserializer函数，看这个函数有点像，而且还传入了this(分析上下文应该是传入待解析的json)，clazz，还有filedname，这里其实clazz已经从`@type`处已经找到字节码了
 
 ![image.png](./fastJson反序列化原理及利用.assets/2023_05_19_16_10_32_hIO8dqJ0.png)
@@ -206,16 +212,21 @@ public class Main {
 ![image.png](./fastJson反序列化原理及利用.assets/2023_05_19_16_10_35_aPSh6N4Q.png)
 
 运行结果如下图所示，我在此处执行了getter方法，而我的getter方法里却实现了弹出计算器的命令执行代码，当invoke之后，调用getter方法，执行命令
+
 ![image.png](./fastJson反序列化原理及利用.assets/2023_05_19_16_10_35_tCyjSFdB.png)
 
 ![image.png](./fastJson反序列化原理及利用.assets/2023_05_19_16_10_36_v4y5niIY.png)
 
 ### 通过getter触发gadget
 测试类选择TemplatesImpl，首先探测可用于触发getter gadgets，如下图所示，可以看到`_auxClasses`，`_outputProperties`属性是map类，首先满足第一条件，继续寻找是否只有getter方法
+
 ![image.png](./fastJson反序列化原理及利用.assets/2023_05_19_16_10_36_3UC2VtYy.png)
 
 在这里可以看到满足条件的两个属性`_auxClasses`，`_outputProperties`，只有`_outputProperties`属性是存在getter方法
+
 ![image.png](./fastJson反序列化原理及利用.assets/2023_05_19_16_10_36_P8znBCSE.png)
+
+
 
 我最初是在网上找了一个复现poc
 
@@ -256,12 +267,17 @@ String json = "{\"@type\":\"" + className + "\"," +
                 "'_tfactory':{}}";
 ```
 然后再进行调试，我们着重看outputProperties触发处，在invoke处进入
+
 ![image.png](./fastJson反序列化原理及利用.assets/2023_05_19_16_10_36_TAFbPONK.png)
 
 然后我们可以看到，这里要进行了newTransformer()，在这里请注意我们要反序列化的字符串的顺序，此时`_bytecodes`，`_name`，已经完成赋值，但是，`_tfactor`，`_outputProperties`还未赋值，此时我们进入`newTransforemer()`方法
+
 ![image.png](./fastJson反序列化原理及利用.assets/2023_05_19_16_10_37_x2Llc5IX.png)
+
 在这里我们要实例化的transformer，需要传入参数，但是`_tfactor`是null
+
 ![image.png](./fastJson反序列化原理及利用.assets/2023_05_19_16_10_37_6FhZv0Dt.png)
+
 我们进入getTransletInstance()函数，this中，_class[_transletIndex] 是初始化的数组，因为_transletIndex = -1了，还有待传入的`_tfactor`为null，可以看到`_class=null`，要执行`defineTransletClasses()`方法，进入该方法
 
 
@@ -270,7 +286,9 @@ String json = "{\"@type\":\"" + className + "\"," +
 ![image.png](./fastJson反序列化原理及利用.assets/2023_05_19_16_10_37_71oMeswg.png)
 
 当我继续向下执行的时候，就直接捕获异常了
+
 ![image.png](./fastJson反序列化原理及利用.assets/2023_05_19_16_10_37_mRcaxEgb.png)
+
 那么我将`_tfactor` 和 `_outputProperties`更换位置呢？先让`_tfactor`取到值，再进行下一步实例化呢？
 
 ![image.png](./fastJson反序列化原理及利用.assets/2023_05_19_16_10_38_4TXBrHnI.png)
@@ -294,7 +312,9 @@ String json = "{\"@type\":\"" + className + "\"," +
 ### getter gadget链路
 当反序列化com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl 类时，由于`_outputProperties` 属性是Map属性，且该属性只有getter方法，没有setter方法，因此会有如下的调用链
 `com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl.getOutputProperties() => new Transformer() => getTranslateInstance() => defineTransletClasses()`，到了这里，会读取`_bytecodes[]`属性中的字节码，然后在判断是否是继承于AbstractTranslet类
+
 ![image.png](./fastJson反序列化原理及利用.assets/2023_05_19_16_10_39_kqE9DeZl.png)
+
 最后调用newInstance()方法实例化该类的对象，该方法是调用该类的缺省构造函数实例化对象
 虽然上面的测试代码给_byteCodes 属性传入的字节码是经过base64编码的，但是在defineTransletClasses()方法中加载字节码之前，在`com.alibaba.fastjson.parser.JSONScanner.bytesValue()`方法中，已经将其解码了
 
@@ -322,6 +342,7 @@ public class TemplatesImplTest {
 
 ```
 ![image.png](./fastJson反序列化原理及利用.assets/2023_05_19_16_10_39_PRx1TlQV.png)
+
 ### Setter gadget 链路
 链路很简单了
 在对com.sun.rowset.JdbcRowSetImpl类反序列化时，会先执行dataSourceName属性的setter方法，给dataSourceName属性赋值为ldap://127.0.0.1:1099/XX，然后执行autoCommit属性的setter方法，有如下调用链：

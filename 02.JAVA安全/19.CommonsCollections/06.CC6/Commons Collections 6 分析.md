@@ -267,8 +267,6 @@ public class TestCC6 {
 ```
 ![image.png](Commons Collections 6 分析.assets/2023_05_19_10_37_34_4hkAdQKN.png)
 
-
-
 ### 更改poc(反序列化HashMap)
 
 ```
@@ -356,8 +354,6 @@ public class TestCC6_Poc_1 {
 
 ```
 ![image.png](Commons Collections 6 分析.assets/2023_05_19_10_37_35_8CFXUb6Q.png)
-
-
 
 ### 更改POC_1(反序列化HashSet 1次反射)
 其实看HashSet这个类的时候，我们可以看到调用add方法的时候，其实传入entry之后，对应的Object就是恶意对象实例，那么就会调用`lazymap#get`方法，从而在客户端就执行1次命令

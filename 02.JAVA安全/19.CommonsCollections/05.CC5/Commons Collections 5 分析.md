@@ -10,6 +10,7 @@ CC5 利用的还是CC1的链路，使用LazyMap，只要调用了LazyMap.get()�
 ![image.png](Commons Collections 5 分析.assets/2023_05_19_10_37_21_KHiUvyfT.png)
 
 那么要在哪里调用这个getvalue函数呢，在`TiedMapEntry`里，我们可以看到该类为其实现了一个`toString()`方法
+
 ![image.png](Commons Collections 5 分析.assets/2023_05_19_10_37_21_x8EC6yVt.png)
 
 那么找到能调用`TiedMapEntry#toString()`方法就显得至关重要，接下来`BadAttributeValueExpException`类就会带来一片光明
@@ -93,6 +94,7 @@ public class TestCC5 {
 ```
 ### 0x1
 第一部分为[CC1 LazyMap 利用链](https://www.yuque.com/da-labs/secnotes/aobl1w)前部分，也可以参考[CC1 分析](https://www.yuque.com/da-labs/secnotes/eru5qp)，这里只要调用了`LazyMap#get`，就会触发`ChainedTransformer.transform()`,进而对transformers链式调用
+
 ```java
 Transformer[] transformers = new Transformer[]{
     new ConstantTransformer(Runtime.class),
@@ -136,7 +138,10 @@ valfield.set(val,entry);
 
 ## 调试
 调试过程和LazyMap是一样的，我们在`LazyMap#get`处`factory.transform(key)`处打下断点来分析
+
 ![image.png](Commons Collections 5 分析.assets/2023_05_19_10_37_22_WcmBpluF.png)
+
+
 
 可以看到利用链路为`BadAttributeValueExpException.readObject()`-> `TiedMapEntry.toString()`-> ` LazyMap.get()`->`ChainedTransformer.transform()`
 
@@ -160,6 +165,7 @@ valfield.set(val,entry);
 ![image.png](Commons Collections 5 分析.assets/2023_05_19_10_37_24_rQw9ecjh.png)
 
 图1 `LazyMap.get()`堆栈前下断点
+
 ![image.png](Commons Collections 5 分析.assets/2023_05_19_10_37_25_EJBxRNAZ.png)
 
 图2 `LazyMap.get()`堆栈前无断点，这就是为什么我在调试部分我没有在其他函数处打断点，而是直接在`LazyMap#get()`处打断点。

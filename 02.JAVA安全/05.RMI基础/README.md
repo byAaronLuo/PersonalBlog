@@ -42,7 +42,6 @@
 
 > PS： 图中的stub就是客户端代理，skeleton就是服务端代理
 
-
 远程方法调用的通信模式：
 
 ![image.png](./RMI基础.assets/2023_05_19_10_29_30_BZm2rs3d.png)

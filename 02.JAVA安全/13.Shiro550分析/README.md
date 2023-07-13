@@ -3,21 +3,33 @@
 在Shiro <=1.2.4中，反序列化过程中所用到的AES加密的key是硬编码在源码中，当用户勾选RememberMe并登录成功，Shiro会将用户的cookie值序列化，AES加密，接着base64编码后存储在cookie的rememberMe字段中，服务端收到登录请求后，会对rememberMe的cookie值进行base64解码，接着进行AES解密，最后反序列化。由于AES加密是对称式加密（key既能加密数据也能解密数据），所以当攻击者知道了AES key后，就能够构造恶意的rememberMe cookie值从而触发反序列化漏洞。
 ## 环境搭建
 在这里选择下载[源码](https://github.com/apache/shiro/releases/tag/shiro-root-1.2.4)来搭建，下载好之后使用最简单的servlet来搭建靶场，倒入shiro-shiro-root-1.2.4 -> samples -> web -> pom.xml
+
 ![image.png](Shiro 550 分析.assets/2023_05_19_10_36_54_5SxBAjhy.png)
+
 在配置完成之后，打开打开会报如下错
+
 ![image.png](Shiro 550 分析.assets/2023_05_19_10_36_55_ipcM13WD.png)
+
 解决办法
 
 - 下载[JSTL标签库](http://archive.apache.org/dist/jakarta/taglibs/standard/binaries/)，并将其导入IDEA中，如下所示
 
 ![image.png](Shiro 550 分析.assets/2023_05_19_10_36_55_yXpkcjWU.png)
+
 然后再导入到对应war包里
+
 ![image.png](Shiro 550 分析.assets/2023_05_19_10_36_56_2ACSpPDW.png)
+
 启动项目如下所示
+
 ![image.png](Shiro 550 分析.assets/2023_05_19_10_36_56_7DyGi1jr.png)
+
 此时可以看见项目自带了Commons Collections 3.2.1 ，但是在war 包的依赖里没有，这里再将Commons Collections 3.2.1 添加到war包里
+
 ![image.png](Shiro 550 分析.assets/2023_05_19_10_36_57_Nf5ByxtM.png)
+
 自此环境搭建成功
+
 ## 攻击流程
 漏洞触发主要有4步
 
@@ -83,20 +95,32 @@ System.out.printf(ciphertext.toString());
 在复现过程中，由于shiro默认使用的commons collections 版本号是3.2.1 但是在复现的过程中，在tomcat下无法直接利用 commons-collections:3.2.1 的问题
 #### 0X1 org.apache.shiro.io.DefaultSerializer.deserialize:40
 这里我们直接看反序列化发生的点，第49行使用了 ClassResolvingObjectInputStream 类而非传统的 ObjectInputStream .这里可能是开发人员做的一种防护措施？
+
 ![image.png](Shiro 550 分析.assets/2023_05_19_10_36_57_T5vtpobs.png)
+
 跟进readObject方法，他重写了 ObjectInputStream 类的 resolveClass 函数， ObjectInputStream 的 resolveClass 函数用的是 Class.forName 类获取当前描述器所指代的类的Class对象
+
 ![image.png](Shiro 550 分析.assets/2023_05_19_10_36_58_tiQAoSb2.png)
+
 #### 0x2 org.apache.shiro.io.ClassResolvingObjectInputStream.resolveClass:20
 然而重写后的 resolveClass 函数，采用的是 ClassUtils.forName ，我们继续看这个forName的实现。
+
 ![image.png](Shiro 550 分析.assets/2023_05_19_10_36_58_XkvL9ZjD.png)
+
 #### 0x3 org.apache.shiro.util.ClassUtils.forName:59
 在这里可以看到与父类的forName方法不一样，再来看看这个 ExceptionIgnoringAccessor 是怎么实现的
+
 ![image.png](Shiro 550 分析.assets/2023_05_19_10_36_59_Zun1Q6sT.png)
+
 ![image.png](Shiro 550 分析.assets/2023_05_19_10_36_59_C5hR6ABc.png)
+
 这里实际上调用了 ParallelWebAppClassLoader 父类 WebappClassLoaderBase 的 loadClass 函数
+
 ![image.png](Shiro 550 分析.assets/2023_05_19_10_37_00_KA7h4IWT.png)
+
 该loadClass载入按照上述的顺序（这里不贴代码了，找到 org.apache.catalina.loader.WebappClassLoaderBase.loadClass 即可），先从cache中找已载入的类，如果前3点都没找到，再通过父类 URLClassLoader 的 loadClass 函数载入。但是实际上此时loadClass的参数name值带上了数组的标志，即 /Lorg/apache/commons/collections/Transformer;.class
 那么找到原因之后，简单来说，只要使用Transformer链式调用transform()函数，都无法利用成功，那么在commons collections 3.2.1中就不使用Transformer类，那么POC如下
+
 ### POC1
 这里改改CC6(ysoserial)
 ```java
@@ -201,7 +225,9 @@ public class TestLazyMap {
 }
 ```
 ![image.png](Shiro 550 分析.assets/2023_05_19_10_37_00_SnNjRmsX.png)
+
 ![image.png](Shiro 550 分析.assets/2023_05_19_10_37_00_oFvLpUCA.png)
+
 ### POC2
 ```java
 package com.test;
@@ -279,7 +305,9 @@ public class TestLazyMap {
 
 ```
 ![image.png](Shiro 550 分析.assets/2023_05_19_10_37_01_TkgHaOuU.png)
+
 ![image.png](Shiro 550 分析.assets/2023_05_19_10_37_02_Y3xQuNKL.png)
+
 ## 参考链接
 [https://blog.csdn.net/m0_67392409/article/details/124100291](https://blog.csdn.net/m0_67392409/article/details/124100291)
 
