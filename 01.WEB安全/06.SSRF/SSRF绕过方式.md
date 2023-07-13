@@ -9,18 +9,29 @@ URL(Uniform Resource Locator,统一资源定位符),用于在互联网中定位�
 http://google.com:80+&@220.181.38.251:80/#+@google.com:80/
 ```
 curl 带着值为qq.com:的Authorization验证头访问百度
+
 ![image.png](.//SSRF 绕过方式.assets/2023_05_19_10_39_48_0gmFcM7J.png)
+
 ## IP进制转换
 IP地址是一个32位的二进制数，通常被分割为4个8位二进制数。通常用“点分十进制”表示成（a.b.c.d）的形式，所以IP地址的每一段可以用其他进制来转换。 [IPFuscator](https://github.com/vysecurity/IPFuscator) 工具可实现IP地址的进制转换，包括了八进制、十进制、十六进制、混合进制。在这个工具的基础上添加了IPV6的转换和版本输出的优化：
 在脚本对IP进行八进制转换时，一些情况下会在字符串末尾多加一个L:
+
 ![image.png](.//SSRF 绕过方式.assets/2023_05_19_10_39_49_rP8C2tjU.png)
+
 这是因为在Python2下区分了int和long类型，int数据超出最大值2147483647后会表示为long类型，体现在八进制转换后的字符串末尾跟了个L:
+
 ![image.png](.//SSRF 绕过方式.assets/2023_05_19_10_39_49_2BCLSNe5.png)
+
 而在python3中都使用int处理，所以可以将脚本升级到Python来用，使用2to3.py工具python3 2to3.py -w xx.py转换代码：
+
 ![image.png](.//SSRF 绕过方式.assets/2023_05_19_10_39_49_QCPnZLJk.png)
+
 然后可以用python3来执行，但是在使用oct()转八进制的时候，有0o标记，这种的在访问时浏览器识别不了：
+
 ![image.png](.//SSRF 绕过方式.assets/2023_05_19_10_39_50_IzOUTDhQ.png)
+
 修正过后的代码如下：
+
 ```python
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
@@ -175,7 +186,9 @@ if __name__ == '__main__':
     main()
 ```
 ![image.png](.//SSRF 绕过方式.assets/2023_05_19_10_39_50_SVIC0pmE.png)
+
 也可以使用IPy模块进行转换：
+
 ```python
 import IPy #IPv4与十进制互转
  
@@ -208,24 +221,45 @@ http://0:80
 ## punycode转码
 IDN（英语：Internationalized Domain Name，缩写：IDN）即为国际化域名，又称特殊字符域名，是指部分或完全使用特殊的文字或字母组成的互联网域名。包括法语、阿拉伯语、中文、斯拉夫语、泰米尔语、希伯来语或拉丁字母等非英文字母，这些文字经多字节万国码编译而成。在域名系统中，国际化域名使用Punycode转写并以美国信息交换标准代码（ASCII）字符串储存。punycode是一种表示Unicode码和ASCII码的有限的字符集，可对IDNs进行punycode转码，转码后的punycode就由26个字母+10个数字，还有“-”组成。
 使用在线的[编码工具](http://tools.jb51.net/punycode/index.php)测试：
+
 ![image.png](.//SSRF 绕过方式.assets/2023_05_19_10_39_51_9XvEhmQi.png)
+
 对正常的字母数字组成的域名，也可以使用punycode编码格式，即：
+
 ```
 www.qq.com => www.xn--qq-.com
 ```
 一些浏览器对正常的域名不会使用punycode解码，如Chrome，所以在Chrome中访问失败，测试了部分PHP中的函数，也会失败：
+
 ![image.png](.//SSRF 绕过方式.assets/2023_05_19_10_39_51_JAqBsWlS.png)
+
+
+
 ## 同形异义字攻击（IDN_homograph_attack，IDN欺骗）
 同形异义字指的是形状相似但是含义不同，这样的字符如希腊、斯拉夫、亚美尼亚字母，部分字符看起来和英文字母一模一样：
+
 ![image.png](.//SSRF 绕过方式.assets/2023_05_19_10_39_51_FpuMOSeh.png)
+
 如果使用这些字符注册域名，很容易进行欺骗攻击([点击查看详情](https://www.xudongz.com/blog/2017/idn-phishing/))，所以就出现了punycode转码，用来将含义特殊字符的域名编码为IDN，目前谷歌浏览器、Safari等浏览器会将存在多种语言的域名进行Punycode编码显示。
+
 ## 封闭式字母数字 (Enclosed Alphanumerics)字符
 [封闭式字母数字](https://www.haomeili.net/ZhiShi/34)是一个由字母数字组成的Unicode印刷符号块，使用这些符号块替换域名中的字母也可以被浏览器接受。目前的浏览器测试只有下列单圆圈的字符可用：
-①	②	③	④	⑤	⑥	⑦	⑧	⑨	⑩	⑪	⑫	⑬	⑭	⑮	⑯    ⑰	⑱	⑲	⑳	Ⓐ	Ⓑ	Ⓒ	Ⓓ	Ⓔ	Ⓕ	Ⓖ	Ⓗ	Ⓘ	Ⓙ    Ⓚ	Ⓛ	Ⓜ	Ⓝ	Ⓞ	Ⓟ	Ⓠ	Ⓡ	Ⓢ	Ⓣ	Ⓤ	Ⓥ	Ⓦ	Ⓧ	Ⓨ	Ⓩ     ⓐ	ⓑ	ⓒ	ⓓ	ⓔ	ⓕ	ⓖ	ⓗ	ⓘ	ⓙ	ⓚ	ⓛ	ⓜ	ⓝ	ⓞ	ⓟ     ⓠ	ⓡ	ⓢ	ⓣ	ⓤ	ⓥ	ⓦ	ⓧ	ⓨ	ⓩ	⓪	
+
+```text
+①	②	③	④	⑤	⑥	⑦	⑧	⑨	⑩	⑪	⑫	⑬	⑭	⑮	⑯  ⑰	⑱	⑲	⑳	Ⓐ	Ⓑ	Ⓒ	Ⓓ	Ⓔ	Ⓕ	Ⓖ	Ⓗ	Ⓘ	Ⓙ Ⓚ	Ⓛ	Ⓜ	Ⓝ	Ⓞ	Ⓟ	Ⓠ	Ⓡ	Ⓢ	Ⓣ	Ⓤ	Ⓥ	Ⓦ	Ⓧ	Ⓨ	Ⓩ ⓐ	ⓑ	ⓒ	ⓓ	ⓔ	ⓕ	ⓖ	ⓗ	ⓘ	ⓙ	ⓚ	ⓛ	ⓜ	ⓝ	ⓞ	ⓟ ⓠ	ⓡ	ⓢ	ⓣ	ⓤ	ⓥ	ⓦ	ⓧ	ⓨ	ⓩ	⓪	
+```
+
 浏览器访问时会自动识别成拉丁英文字符
+
 ![image.png](.//SSRF 绕过方式.assets/2023_05_19_10_39_51_jPe9ZW6s.png)
+
+
+
+
+
 ## Redirect
 可以使用重定向来让服务器访问目标地址，可用于重定向的HTTP状态码：300、301、302、303、305、307、308。在github项目[SSRF-Testing](https://github.com/cujanovi./-Testing/)上可以看到已经配置好的用例：
+
 ```
 https:./.localdomain.pw/img-without-body/301-http-www.qq.com-.i.jpg
  
@@ -235,6 +269,7 @@ https:./.localdomain.pw/json-with-body/301-http-169.254.169.254:80-.j.json
 
 ```
 服务端PHP代码如下：
+
 ```php
 <?php header("Location: http://www.baidu.com");exit(); ?>
 ```
@@ -245,10 +280,14 @@ nslookup 127.0.0.1.nip.io
 nslookup owasp.org.127.0.0.1.nip.io
 ```
 ![image.png](.//SSRF 绕过方式.assets/2023_05_19_10_39_52_w0B7J9Rk.png)
+
 ## DNS 重绑定
 如果某后端代码要发起外部请求，但是不允许对内部IP进行请求，就要对解析的IP进行安全限制，整个流程中首先是要请求一次域名对解析的IP进行检测，检测通过交给后面的函数发起请求。如果在第一次请求时返回公网IP,第二次请求时返回内网IP，就可以达到攻击效果。要使得两次请求返回不同IP需要对DNS缓存进行控制，要设置DNS TTL为0，测试cloudflare并不行：
+
 ![image.png](.//SSRF 绕过方式.assets/2023_05_19_10_39_52_taS2c3j9.png)
+
 那么还可以自定义DNS服务器，这样就能方便控制每次解析的IP地址了，使用[SSRF-Testing](https://github.com/cujanovi./-Testing/)项目中的dns.py脚本执行
+
 ```shell
 python3 dns.py 216.58.214.206 169.254.169.254 127.0.0.1 53 localdomains.pw
 ```
@@ -257,8 +296,11 @@ python3 dns.py 216.58.214.206 169.254.169.254 127.0.0.1 53 localdomains.pw
 nslookup 1111.localdomains.pw 127.0.0.1
 ```
 指定DNS服务器为127.0.0.1，查询解析记录：
+
 ![image.png](.//SSRF 绕过方式.assets/2023_05_19_10_39_53_9Btjh1me.png)
+
 这样一来，两次解析的IP就能方便的控制了。
+
 ## 点分割符号替换
 
 在浏览器中可以使用不同的分割符号来代替域名中的.分割，可以使用。｡．来代替：
@@ -269,7 +311,11 @@ http://www．qq．com
 ```
 ## 短地址绕过
 这个是利用互联网上一些网站提供的[网址缩短](https://www.shorturl.at/)服务进行一些黑名单绕过，其原理也是利用重定向：
+
 ![image.png](.//SSRF 绕过方式.assets/2023_05_19_10_39_54_U2gwkHXE.png)
+
+
+
 ## URL十六进制编码
 URL十六进制编码可被浏览器正常识别，编码脚本：
 ```python
@@ -280,5 +326,8 @@ for x in data:
 print(f'http://{"".join(alist)}')
 ```
 ![image.png](.//SSRF 绕过方式.assets/2023_05_19_10_39_54_fqPJTXVr.png)
+
 ![image.png](.//SSRF 绕过方式.assets/2023_05_19_10_39_54_YN5j2H6g.png)
+
+
 

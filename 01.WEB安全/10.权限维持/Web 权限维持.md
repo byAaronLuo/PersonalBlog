@@ -14,6 +14,9 @@ SetHandler 指令可以强制所有匹配的文件被一个指定的处理器处
   </FilesMatch>
 ```
 ![image.png](./Web_权限维持.assets/2023_05_19_15_14_36_WhC8nfKZ.png)
+
+
+
 ### AddHandler
 AddHandler 指令可以实现在文件扩展名与特定的处理器之间建立映射。
 ```shell
@@ -24,7 +27,11 @@ AddType application/x-httpd-php .png
 ```
 ![aea5735135be5543291d7991875473c.png](./Web_权限维持.assets/2023_05_19_15_14_37_4Zb25CMq.png)
 
+
+
 ![image.png](./Web_权限维持.assets/2023_05_19_15_14_37_4irRGZFo.png)
+
+
 
 
 
@@ -44,8 +51,12 @@ AddType application/x-httpd-php .png
 
 
 
+
+
 ### user.ini && htaccess 自动包含
 ![image.png](./Web_权限维持.assets/2023_05_19_15_14_37_glJmKYwu.png)
+
+
 
 user.ini 和.htaccess都可以使两种配置模式生效：PHP_INI_PREDIR和PHP_INI_ALL 使用文件包含的两个相关配置 
 auto_prepend_file：指定一个文件，在主文件解析之前自动解析
@@ -61,7 +72,11 @@ auto_append_file=test.png
 
 ![e5c247957439f39886177c61346fe26.png](./Web_权限维持.assets/2023_05_19_15_14_37_lFxmtP9N.png)
 
+
+
 ![image.png](./Web_权限维持.assets/2023_05_19_15_14_38_pqoDaJ3c.png)
+
+
 
 
 
