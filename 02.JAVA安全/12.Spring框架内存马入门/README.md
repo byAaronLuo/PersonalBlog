@@ -6,8 +6,12 @@ bean 是Spring 框架的一个核心概念，它是构建程序的主干，并�
 - bean 是对象
 - bean 被 loC容器管理
 - Spring 应用由一个个bean构成
+
+
+
 ### ApplicationContext
-Spring 框架中，BeanFactory 接口是 Spring loC容器的实际代表者
+Spring 框架中，BeanFactory 接口是 Spring loC容器的实际代表
+
 从下面的接口继承关系图可以看出，ApplicationContext接口继承了BeanFactory接口，并通过继承其他接口进一步扩展了基本容器的功能
 
 ![image.png](Spring 框架内存马入门.assets/2023_05_19_10_30_46_V62pCK9G.png)
@@ -55,10 +59,14 @@ IoC容器通过读取配置元数据来获取对象的实例化、配置和组�
 - Spring 应用中可以同时有多个 Context，其中只有一个 Root Context，剩下的全是 Child Context
 - 所有Child Context都可以访问在 Root Context中定义的 bean，但是Root Context无法访问Child Context中定义的 bean
 - 所有的Context在创建后，都会被作为一个属性添加到了 ServletContext中
+
+
+
 #### ContextLoaderListener
 ContextLoaderListener 主要被用来初始化全局唯一的Root Context，即 Root WebApplicationContext。
 这个 Root WebApplicationContext 会和其他 Child Context 实例共享它的 IoC 容器，供其他 Child Context 获取并使用容器中的 bean。
 回到 web.xml 中，其相关配置如下：
+
 ```xml
 <context-param>
     <param-name>contextConfigLocation</param-name>
@@ -69,7 +77,8 @@ ContextLoaderListener 主要被用来初始化全局唯一的Root Context，即 
     <listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
 </listener>
 ```
-依照规范，当没有显式配置 ContextLoaderListener 的 contextConfigLocation 时，程序会自动寻找 /WEB-INF/applicationContext.xml，作为配置文件，所以其实上面的 <context-param> 标签对其实完全可以去掉。
+依照规范，当没有显式配置 `ContextLoaderListener` 的 `contextConfigLocation` 时，程序会自动寻找 `/WEB-INF/applicationContext.xml`，作为配置文件，所以其实上面的` <context-param>` 标签对其实完全可以去掉。
+
 #### DispatcherServlet
 DispatcherServlet 的主要作用是处理传入的web请求，根据配置的 URL pattern，将请求分发给正确的 Controller 和 View。
 DispatcherServlet 初始化完成后，会创建一个普通的 Child Context 实例。
@@ -86,10 +95,10 @@ DispatcherServlet 初始化完成后，会创建一个普通的 Child Context �
     <load-on-startup>1</load-on-startup>
 </servlet>
 ```
-上面给 org.springframework.web.servlet.DispatcherServlet 类设置了个别名 dispatcherServlet ，并配置了它的 contextConfigLocation 参数值为 /WEB-INF/dispatcherServlet-servlet.xml
-依照规范，当没有显式配置 contextConfigLocation 时，程序会自动寻找 /WEB-INF/<servlet-name>-servlet.xml，作为配置文件。因为上面的 <servlet-name> 是 dispatcherServlet，所以当没有显式配置时，程序依然会自动找到 /WEB-INF/dispatcherServlet-servlet.xml 配置文件
-综上，可以了解到：每个具体的 DispatcherServlet 创建的是一个 Child Context，代表一个独立的 IoC 容器；而 ContextLoaderListener 所创建的是一个 Root Context，代表全局唯一的一个公共 IoC 容器
-如果要访问和操作 bean ，一般要获得当前代码执行环境的IoC 容器 代表者 ApplicationContext
+上面给 `org.springframework.web.servlet.DispatcherServlet `类设置了个别名` dispatcherServlet` ，并配置了它的 `contextConfigLocation` 参数值为 `/WEB-INF/dispatcherServlet-servlet.xml`
+依照规范，当没有显式配置 `contextConfigLocation `时，程序会自动寻找 `/WEB-INF/<servlet-name>-servlet.xml`，作为配置文件。因为上面的 `<servlet-name>` 是 `dispatcherServlet`，所以当没有显式配置时，程序依然会自动找到` /WEB-INF/dispatcherServlet-servlet.xml `配置文件
+综上，可以了解到：每个具体的 `DispatcherServlet` 创建的是一个` Child Context`，代表一个独立的 `IoC` 容器；而 `ContextLoaderListener` 所创建的是一个 `Root Context`，代表全局唯一的一个公共` IoC `容器
+如果要访问和操作 bean ，一般要获得当前代码执行环境的`IoC `容器 代表者 `ApplicationContext`
 
 ## 创建Spring MVC项目
 这里使用maven创建spring mvc 项目，实现版本控制
@@ -1187,6 +1196,9 @@ public class Exec extends ClassLoader{
 
 1. 编译的时候，jdk最好选择服务器对应的jdk版本，jdk11 和 jdk8 跨大版本，在编译成功之后使用jndi注入会报错，而且是十分致命的错误
 2. maven项目，尽量也要选择与目标主机spring相差不大的版本，保证能获取到Context
+
+
+
 ## 参考链接
 
 [https://landgrey.me/blog/19/](https://landgrey.me/blog/19/)
