@@ -73,7 +73,7 @@ if __name__ == "__main__":
 ```
 ![image.png](./SSTi.assets/2023_05_19_15_02_21_bszhqgxi.png)
 
-我们可以调试看一下，在调用gensrate 之前，source在经过上一层parse函数解析之后，已经将需要渲染的内容变成了`Template(body=[Output(nodes=[TemplateData(data='Hello '), Mul(left=Const(value=7), right=Const(value=7))])])`
+我们可以调试看一下，在调用`gensrate` 之前，`source`在经过上一层`parse`函数解析之后，已经将需要渲染的内容变成了`Template(body=[Output(nodes=[TemplateData(data='Hello '), Mul(left=Const(value=7), right=Const(value=7))])])`
 
 ![image.png](./SSTi.assets/2023_05_19_15_02_21_jYl7tTcd.png)
 

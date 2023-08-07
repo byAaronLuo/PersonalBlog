@@ -12,6 +12,7 @@ Tomcat需要实现的2个核心功能：
 - 加载并管理Servlet，以及处理具体的Request请求
 
 为此Tomcat设计了两个核心组件： 连接器（Connector）和容器（Container），连接器负责对外交流，容器负责内部处理；同时Tomcat为了实现支持多种IO模型和应用层协议，多个连接器对接一个容器。
+
 ![image.png](Tomcat 内存马无文件攻击.assets/2023_05_19_10_36_37_lOiarutB.png)
 
 - Server 对应一个Tomcat实例；
@@ -53,7 +54,9 @@ Tomcat支持的应用层协议有：
 - Adapter：负责将Tomcat Request对象转成ServletRequest对象，传递给容器；
 
 再细化一下连接器，得到如下架构图：
+
 ![image.png](Tomcat 内存马无文件攻击.assets/2023_05_19_10_36_37_JlSVsg1K.png)
+
 #### ProtocolHandler组件
 Endpoint和Processor放在一起抽象成了ProtocolHandler组件，主要负责处理： **网络连接和应层协议** 。
 ##### Endpoint组件
@@ -69,6 +72,7 @@ connector.getService().getContainer().getPipeline().getFirst().invoke(request, r
 Connector连接器负责外部交流，Container容器负责内部处理。也就是：** 连接器处理Socket通信和应用层协议的解析，得到ServletRequest，而容器则负责处理ServletRequest**。
 容器顾名思义，就是用来装东西的，Tomcat容器就是用来装载Servlet的；
 Tomcat设计了4种容器：Engine、Host、Context和Wrapper。这四种容器是父子关系，如下图所示：
+
 ![image.png](Tomcat 内存马无文件攻击.assets/2023_05_19_10_36_38_nT5LjdsZ.png)
 
 - 一个Host多个Context，一个Context包含多个Servlet；
@@ -104,10 +108,13 @@ Tomcat设计了4种容器：Engine、Host、Context和Wrapper。这四种容器�
 ### 请求定位Servlet的过程
 Tomcat使用Mapper组件来完成请求到Wrapper中Servlet的定位的；Mapper组件的功能就是将用户请求的URL定位到一个Servlet，它的工作原理是： **Mapper组件里保存了WEB应用的配置信息，也就是容器组件与访问路径的映射关系 **。比如Host容器里配置的域名、Context容器里的WEB应用路径以及Wrapper容器里Servlet映射的路径。这是一个多层次的Map；
 当一个请求过来，Mapper组件通过解析请求URL里的域名和路径，再到自己保存的Map里去找，就能定位到一个Servlet。 最终，**一个请求URL只会定位到一个Wrapper容器**，也就是一个Servlet 。
+
 ![image.png](Tomcat 内存马无文件攻击.assets/2023_05_19_10_36_38_FMxDeJIz.png)
+
 连接器中的Adapter会调用容器的service方法来执行Servlet，最先拿到请求的是Engine容器，Engine容器对请求做一些处理后，会把请求传给自己的子容器Host继续处理，以此类推，最终这个请求会传给Wrapper容器，Wrapper容器会调用最终的Servlet来处理。 **整个调用过程是通过Pipeline-Valve管道进行的 。**
-Pipeline-Valve是责任链模式，责任链模式是指：**在一个请求处理的过程中，有很多处理者一次对请求进行处理，每个处理者负责做自己相应的处理，处理完之后再调用下一个处理者继续处理 **。Valve表示一个处理点（也就是一个处理阀门），Valve中的invoke方法就是来处理请求的。
+Pipeline-Valve是责任链模式，责任链模式是指：**在一个请求处理的过程中，有很多处理者一次对请求进行处理，每个处理者负责做自己相应的处理，处理完之后再调用下一个处理者继续处理 **。Valve表示一个处理点（也就是一个处理阀门)，Valve中的invoke方法就是来处理请求的。
 Valve的数据结构如下：
+
 ```java
 public interface Valve {
   public Valve getNext();
@@ -128,8 +135,11 @@ Pipeline中有addValve方法，维护了Valve链表，Valve可以插入到Pipeli
 每个容器都有一个Pipeline对象，只要触发了这个Pipeline的第一个Valve，这个容器里的Pipeline中的Valve都会被调用到。
 其中，Pipeline中的getBasic方法获取的Valve处于Valve链的末端，它是Pipeline中必不可少的一个Valve，** 负责调用下层容器的Pipeline里的第一个Valve **。
 **演示图如下图所示：**
+
 ![image.png](Tomcat 内存马无文件攻击.assets/2023_05_19_10_36_38_dvqCxKRi.png)
+
 而整个过程是通过连接器CoyoteAdapter中的service方法触发的，它会调用Engine的第一个Valve，如下所示：
+
 ```java
 @Override
 public void service(org.apache.coyote.Request req, org.apache.coyote.Response res) {
@@ -146,7 +156,9 @@ Tomcat自定义的类加载器WebAppClassloader为了隔离WEB应用打破了双
 同时，为了防止WEB应用自己的类覆盖JRE的核心类，在本地WEB应用目录下查找之前，先使用ExtClassLoader（使用双亲委托机制）去加载，这样既打破了双亲委托，同时也能安全加载类；
 ### 总结
 最终得到总体的请求流程图，如下图所示：
+
 ![image.png](Tomcat 内存马无文件攻击.assets/2023_05_19_10_36_39_lUFz02jX.png)
+
 ## Tomcat 回显
 该部分大部分来自于[threedr3am-基于tomcat的内存 Webshell 无文件攻击技术](https://xz.aliyun.com/t/7388#toc-2)
 ### 环境
@@ -183,8 +195,11 @@ run:61, TaskThread$WrappingRunnable (org.apache.tomcat.util.threads)
 run:748, Thread (java.lang)
 ```
 按照kingkk师傅的方法，利用的点是在 org.apache.catalina.core.ApplicationFilterChain.internalDoFilter：
+
 ![image.png](Tomcat 内存马无文件攻击.assets/2023_05_19_10_36_39_9qQi5tcv.png)
+
 其中通过反射修改ApplicationDispatcher.WRAP_SAME_OBJECT为true，并且对lastServicedRequest和lastServicedResponse这两个ThreadLocal进行初始化，之后，每次请求进来，就能通过这两个ThreadLocal获取到相应的request和response了。但是，也存在一点小限制，在其set之前，执行完了所有的Filter了`**filter.doFilter(request, response, this)**`**,这个致命的缺点就会导致shiro无法获取到response回显，因为shiro本身就是一个filter**
+
 ```java
 private void internalDoFilter(ServletRequest request, ServletResponse response) throws IOException, ServletException {
     if (this.pos < this.n) {
@@ -249,7 +264,9 @@ private void internalDoFilter(ServletRequest request, ServletResponse response) 
 ### 动态注册Filter
 通过动态注册一个Filter，并且把其放到最前面，这样，我们的Filter就能最先执行了，并且也成为了一个内存Webshell了，要实现动态动态注册filter，第一个步骤就是要获取到request和response，第二步则是通过request或者response去创建filter
 在这里需要知道ApplicationDispather.WRAP_SAME_OBJECT这个变量为false，且lastServiceRequest初始化都为null，如果能将其request,response都set进去，那么则可以直接获取到request，在这里就需要通过反射将ApplicationDispather.WRAP_SAME_OBJECT设置为true使其走到对应的条件语句中来
+
 ![image.png](Tomcat 内存马无文件攻击.assets/2023_05_19_10_36_39_5fCaJOEk.png)
+
 这样当我们第二次访问的时候将 response 从 lastServicedResponse 中取出来，然后将我们命令执行的结果直接写在 response 里面就可以了
 在这里我们先使用一个servlet来本地尝试一下：
 
@@ -329,24 +346,39 @@ public class ShellServlet extends HttpServlet {
 
 ```
 首先在访问/echo的时候，第一次访问ApplicationDispatcher.WRAP_SAME_OBJECT这里为false
+
 ![image.png](Tomcat 内存马无文件攻击.assets/2023_05_19_10_36_40_wSIfWFxq.png)
-在这里就会直接把resquest和response 给对应访问的servlet（ShellServlet）然后可以看到
+
+在这里就会直接把resquest和response 给对应访问的servlet（ShellServlet)然后可以看到
+
 ![image.png](Tomcat 内存马无文件攻击.assets/2023_05_19_10_36_40_sazi95Iu.png)
+
 然后到ShellServlet#doGet()的时候，则会进入到if分支因为当前的ApplicationDispather.WRAP_SAME_OBJECT为false，且lastServicedRequest,lastServicedResponse初始化都为null，通过反射将ApplicationDispather.WRAP_SAME_OBJECT这个变量修改为true，并将lastServicedRequest,lastServicedResponse初始化实例化
+
 ![image.png](Tomcat 内存马无文件攻击.assets/2023_05_19_10_36_40_uDK4vJtm.png)
+
 由于修改值之后，最后到finally，lastServicedRequest，lastServicedResponse又会被设置为(Object) null
+
 ![image.png](Tomcat 内存马无文件攻击.assets/2023_05_19_10_36_41_guj5KGdw.png)
+
 然后第二次访问的时候，此时ApplicationDispather.WRAP_SAME_OBJECT为true，进入条件分支，此时lastServicedRequest，lastServicedResponse都已经被赋值
+
 ![image.png](Tomcat 内存马无文件攻击.assets/2023_05_19_10_36_41_lIDotGaA.png)
+
 然后到我们的Servlet当中来可以看到，传入的参数cmd被获取到，直接就会执行Runtime.getRuntime().exec()
+
 ![image.png](Tomcat 内存马无文件攻击.assets/2023_05_19_10_36_42_NMx0O5HD.png)
+
 最后再通过response回显到页面中
+
 ![image.png](Tomcat 内存马无文件攻击.assets/2023_05_19_10_36_42_uIKHFXWs.png)
+
 ## 反序列化注入Filter
-在进行反序列化注入之前，这里使用之前写的[Commons Collections 系列靶场](https://www.yuque.com/da-labs/secnotes/kdgn6s)
+在进行反序列化注入之前，这里使用之前写的[Commons Collections 系列靶场](/知识库/02.JAVA安全/19.CommonsCollections/08.Commons Collections 系列简单靶场.md)
 这里主要需要执行两步：
 第一步将 request 和 response 存入到 lastServicedRequest 和 lastServicedResponse 中
 第二步从 lastServicedRequest 和 lastServicedResponse 获取到我们的 request 和 response ，然后利用 request 获取到 servletcontext 然后动态注册 Filter
+
 ### 存入request和response
 第一步还是和上面一样需要存入request 和 response 到 lastServicedRequest 和 lastServicedResponse，在这里写一个TomcatEcho类需要继承AbstractTranslet（因为需要携带恶意字节码到服务端加载执行）在其静态代码块中反射修改ApplicationDispatcher.WRAP_SAME_OBJECT为true，并且对lastServicedRequest和lastServicedResponse这两个ThreadLocal进行初始化
 这里贴一下threedr3am师傅的代码
@@ -619,11 +651,19 @@ public class TomcatInject extends AbstractTranslet implements Filter {
 ### 简单分析
 首先将第一步中存入的 request 进行取出
 在下面这个静态方法中就是获取对应的ServletContext，当然需要配合第一步的已经修改WRAP_SAME_OBJECT 值为 true
+
 ![image.png](Tomcat 内存马无文件攻击.assets/2023_05_19_10_36_42_YlpBuXQH.png)
+
 在利用取出的 request 获取到 servletContext 后，就会调用 addFilter 来动态添加
+
 ![image.png](Tomcat 内存马无文件攻击.assets/2023_05_19_10_36_43_J8lFL0YE.png)
+
 然后在doFilter()函数里完成逻辑就行
+
 ![image.png](Tomcat 内存马无文件攻击.assets/2023_05_19_10_36_43_xnj17TJv.png)
+
+
+
 ### 测试
 在这里使用[Y4er——ysoserial](https://github.com/Y4er/ysoserial)大哥修改过的ysoserial，在其中我提取ClassLoaderTemplate，在项目中加入该jar包
 ```java
@@ -761,13 +801,23 @@ public class Test_3 {
 
 ```
 然后对应将TomcatEcho.ser，TomcatInject.ser 通过Base64编码一下
+
 ![image.png](Tomcat 内存马无文件攻击.assets/2023_05_19_10_36_44_W1nCIAeU.png)
-![image.png](Tomcat 内存马无文件攻击.assets/2023_05_19_10_36_45_wUdgzHNJ.png)然后再分别发送至服务器（在参数里切记一定要url编码一次）
+
+![image.png](Tomcat 内存马无文件攻击.assets/2023_05_19_10_36_45_wUdgzHNJ.png)
+
+然后再分别发送至服务器（在参数里切记一定要url编码一次）
+
 ![image.png](Tomcat 内存马无文件攻击.assets/2023_05_19_10_36_46_Rp61hSuI.png)
+
 ![image.png](Tomcat 内存马无文件攻击.assets/2023_05_19_10_36_47_SEdrfte6.png)
+
 然后在web根路径下，带入参数cmd，并执行命令，如下所示
+
 ![image.png](Tomcat 内存马无文件攻击.assets/2023_05_19_10_36_47_NKxbvUdc.png)
+
 ![image.png](Tomcat 内存马无文件攻击.assets/2023_05_19_10_36_48_uvM76NJy.png)
+
 ### 注入冰蝎马
 注入冰蝎马这里需要注意，虽然只是修改filter逻辑，在doFilter()编写冰蝎马逻辑
 首先查看Behinder_v3.0_Beta_9中的shell.jsp代码
@@ -835,10 +885,15 @@ pageContext.put("response",response);
 pageContext.put("session",session);
 ```
 如果如下图所示，在TomcatInject.java里再写一个类U来继承ClassLoader，在编译之后会生成两个Class文件，导致无法调用class U中的方法
+
 ![image.png](Tomcat 内存马无文件攻击.assets/2023_05_19_10_36_48_qzBDlVyO.png)
+
 ![image.png](Tomcat 内存马无文件攻击.assets/2023_05_19_10_36_49_YsjCTGig.png)
+
 ![image.png](Tomcat 内存马无文件攻击.assets/2023_05_19_10_36_49_21aUbI0Y.png)
+
 因为我们不能实例化自己的类加载器，所以我们就使用反射的方法，调用ClassLoader，不过这里也有一个坑点，就是抽象类，是不可以作为invoke()的第一个参数，所以要使用一个他的继承类作为替代品，代码如下
+
 ```java
 //revision BehinderFilter
 Method method = Class.forName("java.lang.ClassLoader").getDeclaredMethod("defineClass", byte[].class, int.class, int.class);
@@ -882,7 +937,9 @@ public void doFilter(ServletRequest servletRequest, ServletResponse servletRespo
 }
 ```
 编译生成对应的TomcatEcho.class,TomcatInject.class，然后通过序列化生成对应的TomcatEcho.ser,TomcatInject.ser,最后通过反序列化漏洞直接在目标web系统中反序列化最后成功注入冰蝎马
+
 ![image.png](Tomcat 内存马无文件攻击.assets/2023_05_19_10_36_49_VtpX8qua.png)
+
 ## 反序列化注入Servlet
 在[Tomcat基础内存马入门](https://www.yuque.com/da-labs/secnotes/ro4qph)中，Tomcat注入内存马中除了注入Filter，还可以注入Servlet
 其中基本思路不变，只是需要获取request，然后从request中获取ServletContext，然后依次获取ApplicationContext、StandardContext，最后将servlet封装成wrapper再使用context添加ServletMapping，就可以了
@@ -1095,8 +1152,13 @@ public class TomcatInjectServlet extends AbstractTranslet implements Servlet {
 
 ```
 编译生成对应的TomcatEcho.class,TomcatInjectServlet.class，然后通过序列化生成对应的TomcatEcho.ser,TomcatInjectServlet.ser,最后通过反序列化漏洞直接在目标web系统中反序列化最后成功注入
+
 ![image.png](Tomcat 内存马无文件攻击.assets/2023_05_19_10_36_50_Imt1x8n7.png)
+
 ![image.png](Tomcat 内存马无文件攻击.assets/2023_05_19_10_36_51_Cfw7qBcj.png)
+
+
+
 ### 注入冰蝎马
 在这里使用/xyz用于区别Filter的冰蝎马，实现原理同Filter，只是实现Servlet接口中的service()方法
 ```java
@@ -1134,6 +1196,7 @@ public void service(ServletRequest servletRequest, ServletResponse servletRespon
 }
 ```
 ![image.png](Tomcat 内存马无文件攻击.assets/2023_05_19_10_36_52_90XMOu7r.png)
+
 ## 反序列化注入Listener
 在[Tomcat基础内存马入门](https://www.yuque.com/da-labs/secnotes/ro4qph)中，Tomcat注入内存马中除了注入Filter，Servlet，还有Listener，但是在该篇中对request理解并不深，未深入研究是否可以回显，在此处发现可以通过request获取response
 ```java
@@ -1281,8 +1344,11 @@ public class TomcatInjectListener extends AbstractTranslet implements ServletReq
 
 ```
 编译生成对应的TomcatEcho.class,TomcatInjectListener.class，然后通过序列化生成对应的TomcatEcho.ser,TomcatInjectListener.ser,最后通过反序列化漏洞直接在目标web系统中反序列化最后成功注入
+
 ![image.png](Tomcat 内存马无文件攻击.assets/2023_05_19_10_36_52_oJbhFnt3.png)
+
 ![image.png](Tomcat 内存马无文件攻击.assets/2023_05_19_10_36_53_UxBwAh4W.png)
+
 ### 注入冰蝎马
 在这里只需要修改Listener的逻辑，为冰蝎马逻辑即可
 ```java
@@ -1321,6 +1387,7 @@ public void requestInitialized(ServletRequestEvent servletRequestEvent) {
 }
 ```
 ![image.png](Tomcat 内存马无文件攻击.assets/2023_05_19_10_36_54_sjB2umcd.png)
+
 ## 参考链接
 [P1n93r-Tomcat 架构原理](https://p1n93r.github.io/post/java/tomcat%E6%9E%B6%E6%9E%84%E5%8E%9F%E7%90%86/)
 

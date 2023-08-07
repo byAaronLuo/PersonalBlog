@@ -21,9 +21,14 @@ ORACLE实例 = 进程 + 进程所使用的内存(SGA)
 
 ## Oracle 数据结构
 逻辑结构：表空间-->段-->区-->块
+
 ![image.png](./Oracle.assets/2023_05_19_10_41_07_8V0sHbz1.png)
 
+
+
 物理结构
+
+
 
 ![image.png](./Oracle.assets/2023_05_19_10_41_07_Pn7KloVe.png)
 
@@ -59,7 +64,7 @@ from table
 [having group_condition]
 [order by column];
 ```
-执行过程：from — where — group by — having — select — order by,可以看出，和 MySQL 很类似。实际上都是 SQL 标准的语法
+执行过程：`from — where — group by — having — select — order by`,可以看出，和` MySQL `很类似。实际上都是 `SQL` 标准的语法
 
 ## 参考链接
 [https://xz.aliyun.com/t/9940](https://xz.aliyun.com/t/9940)

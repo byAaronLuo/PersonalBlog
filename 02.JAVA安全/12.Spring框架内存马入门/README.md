@@ -796,6 +796,7 @@ run:748, Thread (java.lang)
 
 在后方调用mappedHandler的applyPreHandler方法
 ![image.png](Spring 框架内存马入门.assets/2023_05_19_10_30_51_IS3sMwWx.png)
+
 这个方法中就是依次调用每个interceptor实例的preHandle方法，实际上就进入了前面写好的TestInterceptor类的preHandle方法中
 
 ![image.png](Spring 框架内存马入门.assets/2023_05_19_10_30_51_qlV5aZzu.png)

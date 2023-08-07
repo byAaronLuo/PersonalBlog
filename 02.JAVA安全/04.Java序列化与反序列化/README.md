@@ -212,6 +212,10 @@ java是支持自定义`readObject`与`writeObject`方法的，只要某个类中
 
 可以看到自定义的`readObject`的确执行了，不过真实的应用中危险操作比较隐蔽。
 需要注意的是，实现 `readObject/writeObject` 方法一定需要private 私有化，否则会找不到自定义的方法，从而使用ObjectOutputStream中的readObject方法
+
 ![image.png](./Java序列化与反序列化.assets/2023_05_19_15_11_52_1Fri6c87.png)
+
 ![image.png](./Java序列化与反序列化.assets/2023_05_19_15_11_54_0R6ru3cl.png)
+
 ![image.png](./Java序列化与反序列化.assets/2023_05_19_15_11_56_zXq4nMpS.png)
+
