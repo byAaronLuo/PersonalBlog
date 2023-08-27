@@ -68,6 +68,7 @@ if __name__ == "__main__":
 正常请求如下，服务端解析字符之后，就和前面的`Hello`拼接起来，然后呈现给前端
 ![image.png](./SSTi.assets/2023_05_19_15_02_21_CVLGWoM6.png)
 那么如果利用模板语法呢？（这里只针对jinja2做测试）
+
 ```
 {{7*7}}
 ```
@@ -76,6 +77,8 @@ if __name__ == "__main__":
 我们可以调试看一下，在调用`gensrate` 之前，`source`在经过上一层`parse`函数解析之后，已经将需要渲染的内容变成了`Template(body=[Output(nodes=[TemplateData(data='Hello '), Mul(left=Const(value=7), right=Const(value=7))])])`
 
 ![image.png](./SSTi.assets/2023_05_19_15_02_21_jYl7tTcd.png)
+
+
 
 继续单步向下，可以看到模板引擎已经将其解析成代码了
 

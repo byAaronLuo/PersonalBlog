@@ -7,6 +7,7 @@ docker pull vulfocus/spring-core-rce-2022-03-29
 docker run -it -d --name springrce -p 192.168.93.131:9000:8080 vulfocus/spring-core-rce-2022-03-29
 ```
 访问`192.168.93.131:9000` 出现如下界面则说明环境搭建成功
+
 ![image.png](Spring-Core RCE.assets/2023_05_19_10_37_03_V9kD1vnq.png)
 
 ## 漏洞复现

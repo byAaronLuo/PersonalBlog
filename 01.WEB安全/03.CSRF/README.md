@@ -1,7 +1,10 @@
 ## 定义
 跨站请求伪造（也称为 CSRF）是一种 Web 安全漏洞，是指利用受害者尚未失效的身份认证信息（cookie、会话等），诱骗其点击恶意链接或者访问包含攻击代码的页面，在受害人不知情的情况下以受害者的身份向（身份认证信息所对应的）服务器发送请求，从而完成非法操作（如转账、改密等）。
 
+
+
 ![image.png](.//CSRF.assets/2023_05_19_10_43_49_FQdYn62i.png)
+
 具体的攻击流程如下：
 
 1. 用户正常登录web服务，并一直保持在线
@@ -35,8 +38,11 @@ json格式，是指`Content-Type: application/json`的请求，多用于前后�
 由于ajax请求中，如果发送json格式的数据包，除了判断来源和时候存在token以外，由于服务端对提交的数据包会进行预验，也就是在POST请求前的options数据包，这个options是浏览器自己发起的，用于检验是否同源，服务端是否允许访问，浏览器对复杂跨域请求在真正发送请求之前,会先进行一次预请求,就是参数为OPTIONS的第一次请求,他的作用是用于试探性的服务器响应是否正确,即是否能接受真正的请求,如果在options请求之后获取到的响应是拒绝性质的,例如500等http状态,那么它就会停止第二次的真正请求的访问。所以常规的poc是无法执行的。
 #### 闭合JSON
 **条件：Content-Type未做限制**
+
 ![](.//CSRF.assets/2023_05_19_10_43_50_sYiBq9S2.png)
+
 可以看到这段POST数据结尾多了一个=，这种情况下服务端的JSON解析器可能会拒绝这段JSON，因为它不符合JSON数据格式。 这时候我们可以给value赋值从而对=后的数据进行补全，使其构造成一个完整的json格式，可以避免解析器报错
+
 ```html
 <input type="hidden" name='{"appId":"300016001555","appName":"0xdawnnn","test":"' value='test"}' />
 ```
@@ -45,6 +51,7 @@ json格式，是指`Content-Type: application/json`的请求，多用于前后�
 #### Ajax发起请求
 **条件：Content-Type未做限制**
 当跨域影响用户数据HTTP请求(如用XMLHttpRequest发送post)时，浏览器会发送预检请求(OPTIONS请求)给服务端征求支持的请求方法，然后根据服务端响应允许才发送真正的请求。 然而如果服务端对Content-Type进行校验，则不会响应这个OPTIONS请求，从而利用失败。但是更多的情况下服务端可能不会校验Content-Type，或者不会严格校验Content-Type是否为application/json，所以很多情况下这是可用的。
+
 ```html
 <script>
   windows.onload = () => {
@@ -62,6 +69,7 @@ json格式，是指`Content-Type: application/json`的请求，多用于前后�
 ## 其他
 这里说一下referer，referer是http头的字段，但是W3C官方为了规范Referer ，又提出了[Referrer Policy](https://www.w3.org/TR/referrer-policy/)，referer头不能自定义，但是referrer可以由用户自定义是否携带referer,或者只携带origin，以下用代码展示：
 web服务采用node.js
+
 ```javascript
 const express = require('express')
 const app = express()
@@ -99,6 +107,7 @@ app.listen(8888, () => {
 ```
 HTML
 这里注意`meta`标签，可以看到这里添加了referrer为never
+
 ```html
 <!DOCTYPE html>
 <html lang="en">
@@ -125,6 +134,7 @@ HTML
 可以看到这里带上了`Referrer Policy`，然后请求包里是没有referer头的
 
 ![image.png](.//CSRF.assets/2023_05_19_10_43_50_mKLg0odU.png)
+
 最初是只有5种策略的，现在规范增加到9种
 
 ```json

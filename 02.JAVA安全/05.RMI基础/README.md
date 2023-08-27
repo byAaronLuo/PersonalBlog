@@ -46,6 +46,8 @@
 
 ![image.png](./RMI基础.assets/2023_05_19_10_29_30_BZm2rs3d.png)
 
+
+
 ## RMI实现举例
 
 ### 实现过程

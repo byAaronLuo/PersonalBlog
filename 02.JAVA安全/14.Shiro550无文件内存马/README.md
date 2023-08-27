@@ -650,7 +650,7 @@ public class Behinder extends AbstractTranslet implements Servlet {
 
 ![image.png](Shiro 550 无文件内存马.assets/2023_05_19_10_35_14_m8i7tnSK.png)
 
-当普通马都能注入，那就继续注入冰蝎马（这里说一下，为什么我对冰歇情有独钟😂，普通马在url中可以执行其实也行，主要是客户端webshell管理工具用起来真的很爽😂)
+当普通马都能注入，那就继续注入冰蝎马（这里说一下，为什么我对冰蝎情有独钟😂，普通马在url中可以执行其实也行，主要是客户端webshell管理工具用起来真的很爽😂)
 
 ### 0x2 注入Servlet 冰歇马
 同[Tomcat内存马无文件攻击](https://www.yuque.com/da-labs/secnotes/dbyh6g)中的Servlet注入冰歇马一样，同样通过在service方法中添加冰蝎马

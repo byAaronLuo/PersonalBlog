@@ -622,3 +622,4 @@ xmlData = etree.parse(xmlSource,etree.XMLParser(resolve_entities=False))
 - [xxe](https://portswigger.net/web-security/xxe)
 - [XML External Entity (XXE) Injection Payload List](https://github.com/payloadbox/xxe-injection-payload-list)
 - [XXE_payloads](https://gist.github.com/staaldraad/01415b990939494879b4)
+

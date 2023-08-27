@@ -33,8 +33,6 @@ AddType application/x-httpd-php .png
 
 
 
-
-
 ### .htaccess本身
 默认情况下是无法访问.htaccess文件的，需要修改访问的权限
 ```php
@@ -48,10 +46,6 @@ AddType application/x-httpd-php .png
   # 注释内就是需要执行的php代码
 ```
 ![image.png](./Web_权限维持.assets/2023_05_19_15_14_37_xufDKmIP.png)
-
-
-
-
 
 ### user.ini && htaccess 自动包含
 ![image.png](./Web_权限维持.assets/2023_05_19_15_14_37_glJmKYwu.png)
@@ -75,8 +69,6 @@ auto_append_file=test.png
 
 
 ![image.png](./Web_权限维持.assets/2023_05_19_15_14_38_pqoDaJ3c.png)
-
-
 
 
 

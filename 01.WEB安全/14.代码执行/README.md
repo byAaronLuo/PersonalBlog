@@ -48,7 +48,6 @@ Reflect是JavaScript的一个内置对象，Reflect.construct() 方法的行为�
 Reflect.construct(target, argumentsList[, newTarget])
 ```
 
-
 target为Function，argunmentList则为需要传入的方法，再此处就将结果返回回来，在这里就可以看见我们执行了whoami并回显回来了
 
 ![image.png](README.assets/2023_05_19_10_43_56_rit8HjEY.png)

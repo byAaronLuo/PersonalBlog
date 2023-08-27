@@ -13,6 +13,7 @@
 
 ## 了解结构以及路由方式
 ![image.png](./ThinkPHP 3.2.3 SQLi.assets/2023_05_19_10_40_18_aouWCKmj.png)
+
 目录结构中关注Application，因为这个是各种Controller所在的目录，还有相关的配置文件，如路由配置`router.php`(这种文件一般在conf目录下，去找用户自定义的配置文件)
 
 ![image.png](./ThinkPHP 3.2.3 SQLi.assets/2023_05_19_10_40_18_dYgqrcUv.png)
@@ -174,8 +175,6 @@ id[where]=1 and updatexml(1,concat(0x23,user(),0x23),1)%23
 ```
 ![image.png](./ThinkPHP 3.2.3 SQLi.assets/2023_05_19_10_40_26_ra5NIU8A.png)
 
-
-
 #### id[where]注入
 调试一波，强制进入find函数
 
@@ -327,8 +326,6 @@ id=1&order[updatexml(1,concat(0x23,user(),0x23),1)]
 
 ![image.png](./ThinkPHP 3.2.3 SQLi.assets/2023_05_19_10_40_35_HCZeYrVW.png)
 
-
-
 ## 案例分析
 大概知道了几个tp3.2.3的sql注入后，就可以搜索这些关键词来寻找sql注入
 ### 后台AD控制器SQL注入
@@ -344,9 +341,11 @@ id=1) and updatexml(1,concat(0x23,user(),0x23),1)%23
 ![image.png](./ThinkPHP 3.2.3 SQLi.assets/2023_05_19_10_40_36_PMV29dwH.png)
 
 在parseWhere 方法中，whereStr直接拼接了  `$this->parseThinkWhere($key,$val)`;跟进parseThinkWhere，可以看到当key 为_string，`$wherestr` 直接拼接了`$val`
+
 ![image.png](./ThinkPHP 3.2.3 SQLi.assets/2023_05_19_10_40_36_zLWgdvAl.png)
 
 最后拼接成的sql如下所示
+
 ![image.png](./ThinkPHP 3.2.3 SQLi.assets/2023_05_19_10_40_37_E2mxCZXe.png)
 
 
@@ -362,9 +361,7 @@ id=1) and updatexml(1,concat(0x23,user(),0x23),1)%23
 
 ![image.png](./ThinkPHP 3.2.3 SQLi.assets/2023_05_19_10_40_38_yTKzmkw6.png)
 
-
-
-### 后台写入文件getshhell
+### 后台写入文件getshell
 跟着大佬看了一下sp_get_routes这个函数
 ```php
 function sp_get_routes($refresh=false){
@@ -442,8 +439,6 @@ function sp_get_routes($refresh=false){
 
 ![image.png](./ThinkPHP 3.2.3 SQLi.assets/2023_05_19_10_40_39_QpE96mdq.png)
 
-
-
 ![image.png](./ThinkPHP 3.2.3 SQLi.assets/2023_05_19_10_40_39_WwOpTkXA.png)
 
 
@@ -482,7 +477,7 @@ $full_url=htmlspecialchars_decode($er['full_url']);
 
 ![image.png](./ThinkPHP 3.2.3 SQLi.assets/2023_05_19_10_40_41_yFDU4zZp.png)
 
-走到后面可以看到如下代码，只要写入了$all_routes，也不需要<> 等，就可以转换成合法的php代码
+走到后面可以看到如下代码，只要写入了$all_routes，也不需要`<>` 等，就可以转换成合法的`php`代码
 
 ```php
 $url=$er['url'];
