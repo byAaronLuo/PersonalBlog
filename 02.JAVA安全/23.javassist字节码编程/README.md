@@ -1,6 +1,7 @@
 ## 介绍
-`**javassist**`**是一个开源的分析、编辑和创建Java字节码的类库，通过javassist提供的API可以在java程序运行时编辑一个类的字节码信息，改变该类的结构信息。**说简单点，就是一个用来处理Java字节码的类库。
+**`javassist` 是一个开源的分析、编辑和创建Java字节码的类库，通过javassist提供的API可以在java程序运行时编辑一个类的字节码信息，改变该类的结构信息。**说简单点，就是一个用来处理Java字节码的类库。
 除了Javassist，常见的字节码编程工具有`ASM`和`byte-buddy`，这两个工具相对来说更加偏向于底层，需要了解关于jvm的指令；使用`javassist`可以不需要了解jvm指令，只需使用javassist类库提供的API接口就可以实现字节码编程。
+
 ## 使用
 ### 常用类
 javassist字节码编程常用的类：
@@ -84,6 +85,8 @@ public class Main {
 }
 ```
 ![](./08.javassist字节码编程.assets/2023_05_19_10_16_16_ruT6bgCJ.png)
+
+
 
 - 创建构造函数，和刚才的差不多，微改即可
 ```java
