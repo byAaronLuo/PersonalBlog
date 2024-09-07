@@ -3,8 +3,6 @@ OS 命令注入（也称为 shell 注入）是一种 Web 安全漏洞，允许�
 
 ![image.png](README.assets/2023_05_19_10_39_55_CZfoN76I.png)
 
-
-
 ## 常见的场景
 
 - 后台数据库连接
@@ -67,8 +65,6 @@ app.listen(8088, () => {
 ```
 ![image.png](README.assets/2023_05_19_10_39_55_Pt2JXTQO.png)
 
-
-
 ### Linux
 ```json
 {
@@ -77,12 +73,10 @@ app.listen(8088, () => {
 }
 ```
 
-
 ![image.png](README.assets/2023_05_19_10_39_56_iqzy8C4T.png)
 
-
-
 ## 命令执行常用符号
+
 | **操作系统** | **符号** | **释义** |
 | :-: | :-: | :-- |
 | windows | && | command1&& command2 表示先**执行command1成功后**再执行Command2，否则不执行 |
@@ -127,13 +121,10 @@ app.listen(8088, () => {
 
 ![image.png](README.assets/1634029229116-cd297daa-4a72-4a0e-824d-3e47aff59296.png)
 
-
-
 ![image.png](README.assets/2023_05_19_10_39_56_AOWcw3Zp.png)
 
-
-
 #### ||
+
 ```json
 {
 	"productId":"22",
@@ -144,9 +135,8 @@ app.listen(8088, () => {
 
 ![image.png](README.assets/2023_05_19_10_39_56_LCSqUKEo.png)
 
-
-
 #### |
+
 ```json
 {
 	"productId":"22",
@@ -155,12 +145,9 @@ app.listen(8088, () => {
 ```
 ![image.png](README.assets/2023_05_19_10_39_57_ftki0RIu.png)
 
-
-
 #### \>
+
 ![image.png](README.assets/2023_05_19_10_39_57_jk3AGIqM.png)
-
-
 
 ![image.png](README.assets/2023_05_19_10_39_57_VNr0FP9d.png)
 
@@ -180,7 +167,7 @@ app.listen(8088, () => {
 在无回显的时候，注意找到web绝对路径，然后再写入到web路径中去，然后再去访问写入的文件查看命令
 
 ### Linux
-Linux中的`;`对应windows的`&` 用法一致，还有`&&`，`|`，`||` ，`>`，`>>`用法相同，这里主要展示Linux 中的`&`，```` ，`$()` 用法
+Linux中的`;`对应windows的`&` 用法一致，还有`&&`，`|`，`||` ，`>`，`>>`用法相同，这里主要展示Linux 中的`&`， \`\`，`$()` 用法
 #### &
 & 在Linux中是将任务给后台执行，并告知pid，然后再执行后面的命令，当第一个命令执行完毕之后，再返回结果，最后告知第一个命令执行完毕
 
@@ -196,8 +183,6 @@ Linux中的`;`对应windows的`&` 用法一致，还有`&&`，`|`，`||` ，`>`�
 ```
 ![image.png](README.assets/2023_05_19_10_39_59_lZRmNX68.png)
 
-
-
 #### \`\`(反斜杠)
  反斜杠里的字符串是被Linux shell环境直接执行的，类似php的shell_exec()函数，这个函数简写也是````，它的返回值就是命令执行结果，如下所示 
 ![image.png](README.assets/2023_05_19_10_39_59_Pc84yoFN.png)
@@ -208,18 +193,17 @@ ping -c 2 127.0.0.1`whoami`
 ```
 可以看到，``whoami`` 的执行结果已经和127.0.0.1拼接在一起了，通过shell报错也能获取命令
 
+
+
 ![image.png](README.assets/2023_05_19_10_40_00_Wr4zHwxR.png)
 
 ![image.png](README.assets/2023_05_19_10_40_00_eL28BynE.png)
 
-
-
 #### $()
-在shell编程中，$()中存放的是命令，相当于``
+
+在shell编程中，`$()`中存放的是命令，相当于\`\`
 
 ![image.png](README.assets/2023_05_19_10_40_00_5gFDEvd9.png)
-
-
 
 ## 无回显注入
 这里更改一下代码如下
@@ -274,7 +258,7 @@ app.listen(8088, () => {
 
 ![image.png](README.assets/2023_05_19_10_40_01_W0UVpM78.png)
 
-windows 不像Linux那样可以使用```` 以及`$()`外带命令执行的结果，但是可以利用windows的变量来外带数据
+windows 不像Linux那样可以使用\`\` 以及`$()`外带命令执行的结果，但是可以利用windows的变量来外带数据
 
 | **变量** | **描述** |
 | --- | --- |
@@ -317,9 +301,8 @@ windows 不像Linux那样可以使用```` 以及`$()`外带命令执行的结果
 ```
 ![image.png](README.assets/2023_05_19_10_40_02_LhBoJZxD.png)
 
+### Linux
 
-
-#### Linux
 ```json
 {
 	"productId":"22",
@@ -332,10 +315,9 @@ windows 不像Linux那样可以使用```` 以及`$()`外带命令执行的结果
 
 ![image.png](README.assets/2023_05_19_10_40_03_InKWrhc4.png)
 
-
-
 ### 文件重定向
-由于是无回显的命令注入，那么需要找到web的路径，然后将命令写到web绝对路径中查看，示例代码的web解析路径在public/html目录下，那么需要将文件写入到${web}/public/html下，访问${url}/public/xxx即可
+
+由于是无回显的命令注入，那么需要找到`web`的路径，然后将命令写到`web`绝对路径中查看，示例代码的`web`解析路径在`public/html`目录下，那么需要将文件写入到`${web}/public/html`下，访问`${url}/public/xxx`即可
 #### windows
 ```json
 // 请根据实际需要修改web路径
@@ -348,16 +330,14 @@ windows 不像Linux那样可以使用```` 以及`$()`外带命令执行的结果
 
 ![image.png](README.assets/2023_05_19_10_40_03_gztGjiCl.png)
 
-
-
 #### Linux
+
 ![image.png](README.assets/2023_05_19_10_40_04_lA3ywOcn.png)
 
 ![image.png](README.assets/2023_05_19_10_40_04_0M6hOkKg.png)
 
-
-
 ## 命令执行小tips
+
 一般检测方式是使用基于时间，DNSLOG检测，这两种情况都需要
 ### 基于时间
 基于时间的检测方式大多使用`ping`命令，也有如`nc`，`curl`，`telnet`，但是这些命令有的服务器是不存在的，所以这里使用ping命令，来对比传输多个包与一个包的时间差异来判断是否存在命令注入
@@ -447,6 +427,4 @@ txt
 [https://www.cnblogs.com/q1ya/articles/14956544.html](https://www.cnblogs.com/q1ya/articles/14956544.html)
 
 [https://www.bilibili.com/read/cv8197693/](https://www.bilibili.com/read/cv8197693/)
-
-
 

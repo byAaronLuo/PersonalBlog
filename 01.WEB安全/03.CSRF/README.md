@@ -1,8 +1,6 @@
 ## 定义
 跨站请求伪造（也称为 CSRF）是一种 Web 安全漏洞，是指利用受害者尚未失效的身份认证信息（cookie、会话等），诱骗其点击恶意链接或者访问包含攻击代码的页面，在受害人不知情的情况下以受害者的身份向（身份认证信息所对应的）服务器发送请求，从而完成非法操作（如转账、改密等）。
 
-
-
 ![image.png](.//CSRF.assets/2023_05_19_10_43_49_FQdYn62i.png)
 
 具体的攻击流程如下：
@@ -25,7 +23,7 @@
 ## GET 型请求
 在web应用中，很多接口通过GET进行数据的请求和存储，如果未对来源进行校验，并且没有token保护，攻击者可以直接通过发送含有poc的链接进行诱导点击。此外，亦可以通过评论区或类似功能处发布图片，通过修改img地址的方式保存至页面，用户访问便会进行自动加载造成攻击。
 假如存在修改密码的场景，发送的数据包如下：
-```
+```http
 http://192.168.200.38:8080/editPassword?oldpassword=xxx&newpassword=xxx
 ```
 当攻击者知道了后台结构，即可将上述链接放置在img标签，只要受害者在cookie未失效，且服务端未提供任何保护的情况下，就可以直接修改受害者的密码
@@ -35,7 +33,9 @@ http://192.168.200.38:8080/editPassword?oldpassword=xxx&newpassword=xxx
 一般表单格式的POST请求，在如SpringBoot项目中，注解如果是`@RequestMaping('/')`没有指定是GET还是POST的情况下，可以使用GET型测试绕过，测试方法使用burp的Engagement生成CSRF poc 测试
 ### json格式
 json格式，是指`Content-Type: application/json`的请求，多用于前后端分离的项目，使用ajax异步请求获取数据
+
 由于ajax请求中，如果发送json格式的数据包，除了判断来源和时候存在token以外，由于服务端对提交的数据包会进行预验，也就是在POST请求前的options数据包，这个options是浏览器自己发起的，用于检验是否同源，服务端是否允许访问，浏览器对复杂跨域请求在真正发送请求之前,会先进行一次预请求,就是参数为OPTIONS的第一次请求,他的作用是用于试探性的服务器响应是否正确,即是否能接受真正的请求,如果在options请求之后获取到的响应是拒绝性质的,例如500等http状态,那么它就会停止第二次的真正请求的访问。所以常规的poc是无法执行的。
+
 #### 闭合JSON
 **条件：Content-Type未做限制**
 
@@ -47,9 +47,12 @@ json格式，是指`Content-Type: application/json`的请求，多用于前后�
 <input type="hidden" name='{"appId":"300016001555","appName":"0xdawnnn","test":"' value='test"}' />
 ```
 ![](.//CSRF.assets/2023_05_19_10_43_50_7cBrYKua.png)
+
 (这个图片是从公司Wiki里搞下来的，没有来源，如有侵权请联系我)
+
 #### Ajax发起请求
 **条件：Content-Type未做限制**
+
 当跨域影响用户数据HTTP请求(如用XMLHttpRequest发送post)时，浏览器会发送预检请求(OPTIONS请求)给服务端征求支持的请求方法，然后根据服务端响应允许才发送真正的请求。 然而如果服务端对Content-Type进行校验，则不会响应这个OPTIONS请求，从而利用失败。但是更多的情况下服务端可能不会校验Content-Type，或者不会严格校验Content-Type是否为application/json，所以很多情况下这是可用的。
 
 ```html

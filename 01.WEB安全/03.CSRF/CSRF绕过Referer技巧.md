@@ -14,7 +14,7 @@
 
 -  form表单页面加上如下内容：  
 ```html
-  <meta name="referrer" content="never" >
+<meta name="referrer" content="never" >
 ```
 
 -  a标签的一个属性ref  
@@ -24,7 +24,7 @@
 
 -  利用其他的协议，比如`data:`、`file:`等  
 ```html
-  <iframe src="data:text/html;base64,PGZvcm0gbWV0aG9kPXBvc3QgYWN0aW9uPWh0dHA6Ly9hLmIuY29tL2Q+PGlucHV0IHR5cGU9dGV4dCBuYW1lPSdpZCcgdmFsdWU9JzEyMycvPjwvZm9ybT48c2NyaXB0PmRvY3VtZW50LmZvcm1zWzBdLnN1Ym1pdCgpOzwvc2NyaXB0Pg==">
+<iframe src="data:text/html;base64,PGZvcm0gbWV0aG9kPXBvc3QgYWN0aW9uPWh0dHA6Ly9hLmIuY29tL2Q+PGlucHV0IHR5cGU9dGV4dCBuYW1lPSdpZCcgdmFsdWU9JzEyMycvPjwvZm9ybT48c2NyaXB0PmRvY3VtZW50LmZvcm1zWzBdLnN1Ym1pdCgpOzwvc2NyaXB0Pg==">
 ```
 
 -  如果目标是http的站点，那么将poc放到https的站点上，从https的站点跳转到http的站点，也是不带有referer的 

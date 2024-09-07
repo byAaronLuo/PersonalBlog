@@ -15,6 +15,7 @@ XSS分为：反射型XSS，存储型XSS，DOM型XSS
 
 ### 存储型XSS
 ![image.png](./XSS.assets/2023_05_19_14_07_47_5t7DnlaU.png)
+
 具体攻击流程如下：
 
 1. 攻击者向web服务插入XSS代码
@@ -28,6 +29,7 @@ XSS分为：反射型XSS，存储型XSS，DOM型XSS
 
 ### DOM型XSS
 ![image.png](./XSS.assets/2023_05_19_14_07_47_oCrxX7ER.png)
+
 具体攻击流程如下：
 
 1. 攻击者将payload放置在url链接中（这是针对是GET型反射XSS）
@@ -60,15 +62,11 @@ XSS主要是攻击客户端浏览器，但是客户端浏览器侧的JavaScript�
 - 表单
 - 搜索框
 
-
-
 ### 常见业务场景
 
 - 重灾区：评论区、留言区、个人信息、订单信息等
 - 针对型：站内信、网页即时通讯、私信、意见反馈
 - 存在风险：搜索框、当前目录、图片属性等
-
-
 
 ### 白盒测试(代码审计)
 关于XSS的代码审计主要就是从接收参数的地方和一些关键词入手。
@@ -80,7 +78,9 @@ PHP中常见的接收参数的方式有$_GET、$_POST、$_REQUEST等等，可以
 xss 主要是针对浏览器客户端的一种攻击，那么需要执行JavaScript代码，那么无疑需要使用到JavaScript语言以及在HTML中可以加载JavaScript的标签
 ### 标签类
 #### script
-<script></script> 标签是最直接的XSS payload，<script></script>标签可以在浏览器渲染DOM树的时候同步执行JavaScript代码，他可以引用外部，也可以将代码插入标签内
+
+`<script></script>` 标签是最直接的XSS payload，`<script></script>`标签可以在浏览器渲染DOM树的时候同步执行`JavaScript`代码，他可以引用外部，也可以将代码插入标签内
+
 ```html
 <script>alert("xss")</script>
 <script>alert(/xss/)</script>
