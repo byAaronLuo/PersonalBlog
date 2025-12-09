@@ -26,7 +26,7 @@ java HelloWorld
 
 ![image-20230529104922439](README.assets/image-20230529104922439.png)
 
-以上代码是一个示例，是入门`Java` 语言时的`Hello World`示例，可以看到class问及哦安是字节码格式文件，`Java`虚拟机并不能直接识别`.java`源文件，所以需要`javac` 将其转换成`.class`文件。另外，如果用`C`或者`Python`编写的程序正确转化成`.class`文件，`java`虚拟机也可以识别运行的
+以上代码是一个示例，是入门`Java` 语言时的`Hello World`示例，可以看到class文件是字节码格式文件，`Java`虚拟机并不能直接识别`.java`源文件，所以需要`javac` 将其转换成`.class`文件。另外，如果用`C`或者`Python`编写的程序正确转化成`.class`文件，`java`虚拟机也可以识别运行的
 
 ## 环境变量
 
@@ -538,7 +538,7 @@ public  URLClassLoader(URL[] urls, ClassLoader parent, URLStreamHandlerFactory f
 
 ### 双亲委托
 
-一个类加载器查找class和resource时，是通过“委托模式”进行的，它首先判断这个class是否已经加载成功，如果没有的话，它并不是自己进行查找，而是先通过父加载器，然后递归下去，知道BootStrapClassloader，如果BootStrapClassloader找到了，直接返回，乳沟没有找到，则一级一级返回，最后到达自身去查找这些对象，这种机制就叫做双亲委托
+一个类加载器查找class和resource时，是通过“委托模式”进行的，它首先判断这个class是否已经加载成功，如果没有的话，它并不是自己进行查找，而是先通过父加载器，然后递归下去，知道BootStrapClassloader，如果BootStrapClassloader找到了，直接返回，如果没有找到，则一级一级返回，最后到达自身去查找这些对象，这种机制就叫做双亲委托
 
 整个流程如下图所示
 

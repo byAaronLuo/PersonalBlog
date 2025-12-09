@@ -24,15 +24,11 @@ MySQL 是一个关系型数据库管理系统，由瑞典 MySQL AB 公司开发�
 
 - 增 ，增加数据，通常在SQL语句中，其简单结构通常可以表示为：
 
-
-
 ```sql
 INSERT INTO table_name ( field1, field2,...fieldN ) VALUES ( value1, value2,...valueN );
 ```
 
 - 删，删除数据，通常在SQL语句中，其简单结构通常可以表示为：
-
-
 
 ```sql
 DELETE FROM table_name [WHERE Clause]
@@ -40,15 +36,11 @@ DELETE FROM table_name [WHERE Clause]
 
 - 改，更新数据，通常在SQL语句中，其简单结构通常可以表示为：
 
-
-
 ```sql
 UPDATE table_name SET field1=new-value1, field2=new-value2 [WHERE Clause]
 ```
 
 - 查，查询数据，通常在SQL语句中，其简单结构可以表示为：
-
-
 
 ```sql
 SELECT column_name,column_name FROM table_name [WHERE Clause] [LIMIT N][ OFFSET M]
